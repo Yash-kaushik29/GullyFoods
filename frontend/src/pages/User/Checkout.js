@@ -2,7 +2,6 @@ import { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
-
 import Navbar from "../../components/Navbar";
 import { UserContext } from "../../context/userContext";
 import CheckoutPayment from "../../components/CheckoutPayment";
@@ -11,6 +10,7 @@ import CheckoutSummary from "../../components/CheckoutSummary";
 import CheckoutAddress from "../../components/CheckoutAddress ";
 import api from "../../utils/axiosInstance";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import OrderNoteSection from "../../components/OrderNoteSection";
 
 const Checkout = () => {
   const location = useLocation();
@@ -42,6 +42,7 @@ const Checkout = () => {
   const [discount, setDiscount] = useState(0);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [distance, setDistance] = useState(0);
+  const [orderNote, setOrderNote] = useState("");
 
   const isFoodOrder = cartKey === "foodCart";
 
@@ -74,7 +75,7 @@ const Checkout = () => {
         if (addresses.length > 0) {
           handleSelectAddress(addresses[0]);
         } else {
-          setSelectedAddress(null); 
+          setSelectedAddress(null);
         }
       } else {
         toast.error("Failed to fetch addresses");
@@ -149,11 +150,13 @@ const Checkout = () => {
       userId: user._id,
       cartItems,
       orderType: isFoodOrder ? "Food" : "Grocery",
+      distance,
       deliveryCharge,
       serviceCharge,
       taxes: isFoodOrder ? taxes : undefined,
       convenienceFees: isFoodOrder ? convenienceFees : undefined,
       discount,
+      orderNote,
       coupon: selectedCoupon ? selectedCoupon._id : null,
       address: selectedAddress,
       paymentMethod: paymentMethod === "Razorpay" ? "Online" : "COD",
@@ -166,7 +169,7 @@ const Checkout = () => {
         const { data } = await api.post(
           `/api/order/create-order`,
           orderPayload,
-          { withCredentials: true }
+          { withCredentials: true },
         );
         if (data.success) {
           toast.success("🎉 Order Placed Successfully!");
@@ -193,7 +196,7 @@ const Checkout = () => {
       const { data } = await api.post(
         `/api/payment/createOrder`,
         { orderId: 1, cart: cartItems, deliveryCharge },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       const razor = new window.Razorpay({
@@ -210,14 +213,14 @@ const Checkout = () => {
               payment_id: response.razorpay_payment_id,
               signature: response.razorpay_signature,
             },
-            { withCredentials: true }
+            { withCredentials: true },
           );
 
           if (verifyRes.data.success) {
             const { data } = await api.post(
               `/api/order/create-order`,
               orderPayload,
-              { withCredentials: true }
+              { withCredentials: true },
             );
             if (data.success) {
               toast.success("🎉 Order Placed Successfully!");
@@ -240,7 +243,8 @@ const Checkout = () => {
   };
 
   const totalAmount =
-    cartTotalPrice - discount +
+    cartTotalPrice -
+    discount +
     (isFoodOrder
       ? taxes + convenienceFees + deliveryCharge
       : getGroceryServiceCharge(cartTotalPrice) + deliveryCharge);
@@ -263,8 +267,8 @@ const Checkout = () => {
       <ToastContainer position="top-right" autoClose={3000} />
       <Navbar />
 
-      <div className="max-w-lg mx-auto p-6 rounded-2xl shadow-xl bg-white dark:bg-gray-800">
-        <h2 className="text-2xl font-bold mb-4 text-center text-gray-900 dark:text-white">
+      <div className="max-w-lg mx-auto px-6 py-4 rounded-2xl shadow-xl bg-white dark:bg-gray-800">
+        <h2 className="text-2xl font-bold mb-1 text-center text-gray-900 dark:text-white">
           Checkout 🛒
         </h2>
 
@@ -278,6 +282,8 @@ const Checkout = () => {
             user={user}
           />
         )}
+
+        <OrderNoteSection orderNote={orderNote} setOrderNote={setOrderNote} />
 
         {/* Order Summary */}
         <CheckoutSummary

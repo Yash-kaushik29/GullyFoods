@@ -11,7 +11,56 @@ const QRCode = require("qrcode");
 const authenticateUser = require("../middleware/authMiddleware");
 const authenticateSeller = require("../middleware/sellerAuthMiddleware");
 const { sendTelegramMessage } = require("../config/telegram.config");
-const { sendOrderStatusNotification, sendDeliveryBoyNotification } = require("../config/firebase.config");
+const {
+  sendOrderStatusNotification,
+  sendDeliveryBoyNotification,
+} = require("../config/firebase.config");
+
+const calculateExpectedDeliveryTime = (orderType, itemCount, distance) => {
+  console.log(orderType, itemCount, distance);
+  const processingTime = 5;
+
+  let preparingTime = 15;
+
+  if (orderType === "Food") {
+    if (itemCount == 1) {
+      preparingTime = 15;
+    } else if (itemCount <= 3) {
+      preparingTime = 20;
+    } else {
+      preparingTime = 30;
+    }
+  } else {
+    if (itemCount <= 5) {
+      preparingTime = 20;
+    } else if (itemCount <= 10) {
+      preparingTime = 25;
+    } else if (itemCount <= 15) {
+      preparingTime = 30;
+    } else {
+      preparingTime = 35;
+    }
+  }
+
+  let deliveryTime = 0;
+
+  if (distance <= 3) {
+    deliveryTime = 10;
+  } else if (distance <= 5) {
+    deliveryTime = 15;
+  } else if (distance <= 8) {
+    deliveryTime = 20;
+  } else if (distance <= 12) {
+    deliveryTime = 25;
+  } else {
+    deliveryTime = Math.round(distance * 2.5);
+  }
+
+  console.log(processingTime, preparingTime, deliveryTime);
+  const totalMinutes = processingTime + preparingTime + deliveryTime;
+
+  return new Date(Date.now() + totalMinutes * 60 * 1000);
+};
 
 router.post("/create-order", authenticateUser, async (req, res) => {
   const userId = req.user._id;
@@ -22,10 +71,12 @@ router.post("/create-order", authenticateUser, async (req, res) => {
     convenienceFees = 0,
     serviceCharge = 0,
     discount = 0,
+    orderNote,
     address,
     paymentStatus,
     deliveryCharge = 0,
     orderType,
+    distance,
     cartKey,
     coupon,
   } = req.body;
@@ -83,6 +134,12 @@ router.post("/create-order", authenticateUser, async (req, res) => {
         (orderType === "Food" ? taxes + convenienceFees : serviceCharge),
     );
 
+    const expectedDeliveryTime = calculateExpectedDeliveryTime(
+      orderType,
+      cartItems.length,
+      distance,
+    );
+
     const newOrder = new Order({
       user: userId,
       items: orderItems,
@@ -99,21 +156,23 @@ router.post("/create-order", authenticateUser, async (req, res) => {
       deliveryCharge,
       paymentStatus,
       sellersNotified,
+      orderNote,
+      expectedDeliveryTime,
     });
 
     await newOrder.save();
 
-//     await sendTelegramMessage(`
-//     🛒 <b>NEW ORDER RECEIVED</b>
-    
-//     📦 Order ID: <b>#${newOrder?.id || "N/A"}</b>
-//     💰 Amount: ₹${newOrder?.totalAmount}
-//     🔗 <a href="https://gullyfoods.app/viewOrder/${newOrder?.id}">
-// View Order Details
-// </a>
-    
-//     ⏰ ${new Date().toLocaleString("en-IN")}
-//     `);
+    //     await sendTelegramMessage(`
+    //     🛒 <b>NEW ORDER RECEIVED</b>
+
+    //     📦 Order ID: <b>#${newOrder?.id || "N/A"}</b>
+    //     💰 Amount: ₹${newOrder?.totalAmount}
+    //     🔗 <a href="https://gullyfoods.app/viewOrder/${newOrder?.id}">
+    // View Order Details
+    // </a>
+
+    //     ⏰ ${new Date().toLocaleString("en-IN")}
+    //     `);
 
     // ✅ Clear cart
     const updateCart = {
@@ -158,20 +217,12 @@ router.post("/create-order", authenticateUser, async (req, res) => {
       ),
     );
 
-    // ✅ Send push notifications in background (don't block response)
-    sendOrderStatusNotification(userId, newOrder.id, newOrder._id, "Processing");
-
-    // ✅ Notify available delivery boys in background
-    DeliveryBoy.find({ isAvailable: true }).select("_id").then(availableDeliveryBoys => {
-      for (const deliveryBoy of availableDeliveryBoys) {
-        sendDeliveryBoyNotification(
-          deliveryBoy._id,
-          newOrder.id,
-          newOrder._id,
-          address?.area || "your area"
-        );
-      }
-    });
+    sendOrderStatusNotification(
+      userId,
+      newOrder.id,
+      newOrder._id,
+      "Processing",
+    );
 
     res.status(201).json({
       success: true,
@@ -191,10 +242,10 @@ router.get("/getOrderDetails/:id", async (req, res) => {
     const order = await Order.findOne({ _id: id })
       .populate({
         path: "items.product",
-        select: "name price shopName", // ✅ Fetch product details
+        select: "name price shopName",
       })
-      .populate("user", "name email phone") // ✅ Fetch user details in a cleaner way
-      .lean(); // ✅ Converts Mongoose document to plain object for better performance
+      .populate("user", "name email phone")
+      .lean();
 
     if (!order) {
       return res
@@ -252,7 +303,6 @@ router.post("/submit-review", async (req, res) => {
   }
 });
 
-// Helper to handle page breaks
 function checkPageSpace(doc, neededHeight = 50) {
   if (doc.y + neededHeight > doc.page.height - doc.page.margins.bottom) {
     doc.addPage();

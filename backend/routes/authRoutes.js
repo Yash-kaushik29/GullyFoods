@@ -282,12 +282,10 @@ router.post("/user-login", async (req, res) => {
     const existingUser = await User.findOne({ phone });
 
     if (!existingUser) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Please Signup first from below link!",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Please Signup first from below link!",
+      });
     }
 
     const existingOtp = await Otp.findOne({ phone, otpFor: "login" });
@@ -647,6 +645,44 @@ router.post("/switch-to-seller", async (req, res) => {
       message: "Server error while switching to seller",
     });
   }
+});
+
+router.post("/tester-login", async (req, res) => {
+  let existingUser = await User.findOne({ phone: "12345" });
+
+  if (!existingUser) {
+    existingUser = await User.create({
+      username: "Test User",
+      phone: "12345",
+    });
+  }
+
+  const token = jwt.sign(
+    {
+      userID: existingUser._id,
+      username: existingUser.username,
+      phone: existingUser.phone,
+    },
+    process.env.JWT_SECRET_KEY,
+    { expiresIn: "90d" },
+  );
+
+  const maxAge = 90 * 24 * 60 * 60 * 1000;
+
+  const isProduction = process.env.NODE_ENV === "production";
+
+  res.cookie("authToken", token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "None" : "Lax",
+    expires: new Date(Date.now() + maxAge),
+    path: "/",
+  });
+
+  return res.json({
+    success: true,
+    existingUser,
+  });
 });
 
 module.exports = router;

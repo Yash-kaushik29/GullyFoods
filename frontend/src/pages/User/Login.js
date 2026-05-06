@@ -16,7 +16,7 @@ export default function Login() {
   const OTP_COOLDOWN = 90;
   const navigate = useNavigate();
 
-  if(user) {
+  if (user) {
     navigate("/");
   }
 
@@ -63,16 +63,53 @@ export default function Login() {
 
   const sendOtp = async () => {
     const { phone } = formData;
+
+    // ✅ Test account bypass
+    if (phone === "12345") {
+      try {
+        setLoading(true);
+
+        const fcmToken = await requestNotificationPermission();
+
+        const res = await api.post(
+          `/api/auth/tester-login`,
+          {
+            phone: "12345",
+            fcmToken,
+          },
+          { withCredentials: true },
+        );
+
+        if (res.data.success) {
+          toast.success("Logged into test account");
+
+          setUser(res.data.existingUser);
+
+          setTimeout(() => {
+            navigate("/");
+          }, 2000);
+        }
+      } catch (err) {
+        toast.error("Test login failed");
+      } finally {
+        setLoading(false);
+      }
+
+      return;
+    }
+
     if (!phone) return toast.warn("Please enter your phone number.");
+
     if (!isValidPhone(phone))
       return toast.error("Enter a valid 10-digit mobile number.");
 
     setLoading(true);
+
     try {
       const res = await api.post(
         `/api/auth/send-login-otp`,
-        { formData }, 
-        {withCredentials: true},
+        { formData },
+        { withCredentials: true },
       );
 
       if (res.data.success) {
@@ -80,6 +117,7 @@ export default function Login() {
         setOtpSent(true);
         setCanResend(false);
         setTimeLeft(OTP_COOLDOWN);
+
         const expireTime = Date.now() + OTP_COOLDOWN * 1000;
         localStorage.setItem("otpExpireTime", expireTime);
       } else {
@@ -88,6 +126,7 @@ export default function Login() {
     } catch (err) {
       const errMsg =
         err.response?.data?.message || "Server error. Try again later.";
+
       toast.error(errMsg);
     } finally {
       setLoading(false);
@@ -109,7 +148,7 @@ export default function Login() {
       const res = await api.post(
         `/api/auth/user-login`,
         { phone, otp, fcmToken },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       if (res.data.success) {

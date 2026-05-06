@@ -1,7 +1,14 @@
-import React from 'react';
+import React from "react";
 
-const CheckoutAddress = ({ userAddresses, selectedAddress, setSelectedAddress, handleSelectAddress, navigate, user }) => {
-  if(userAddresses.length === 0)
+const CheckoutAddress = ({
+  userAddresses,
+  selectedAddress,
+  setSelectedAddress,
+  handleSelectAddress,
+  navigate,
+  user,
+}) => {
+  if (userAddresses.length === 0)
     return (
       <div className="text-center text-sm text-gray-500 dark:text-gray-400">
         <p>No saved addresses found.</p>
@@ -15,8 +22,17 @@ const CheckoutAddress = ({ userAddresses, selectedAddress, setSelectedAddress, h
     );
 
   return (
-    <div className="space-y-3 mb-6">
-      <h3 className='text-center text-green-500' >Tap on the address to select it.</h3>
+    <div className="space-y-2 mb-3">
+      <div className="flex flex-col gap-1 justify-center items-center text-center">
+        <button
+          onClick={() => navigate(`/user/addresses/${user._id}`)}
+          className="mt-2 text-green-500 underline hover:text-green-600"
+        >
+          ➕ Add a new address
+        </button>
+
+        <h3 className="text-green-500">Tap on the address to select it.</h3>
+      </div>
       {userAddresses.map((addr, index) => (
         <div
           key={index}
@@ -28,9 +44,12 @@ const CheckoutAddress = ({ userAddresses, selectedAddress, setSelectedAddress, h
                 : "border-gray-300 dark:border-gray-600 hover:border-green-400"
             }`}
         >
-          <p className="font-semibold text-gray-900 dark:text-white">{addr.fullName}</p>
-          <p className="text-sm text-gray-700 dark:text-gray-300">{addr.phone}</p>
-          <p className="text-sm text-gray-800 dark:text-gray-400">{addr.addressLine}, {addr.area}</p>
+          <p className="font-semibold text-gray-900 dark:text-white">
+            {addr.fullName}, {addr.phone}
+          </p>
+          <p className="text-sm text-gray-800 dark:text-gray-400">
+            {addr.addressLine}, {addr.area}
+          </p>
         </div>
       ))}
     </div>
