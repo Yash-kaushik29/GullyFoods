@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { IoCheckmarkCircleOutline, IoCloseCircleOutline, IoTimeOutline, IoClose, IoDocumentTextOutline } from "react-icons/io5";
+import {
+  IoCheckmarkCircleOutline,
+  IoCloseCircleOutline,
+  IoTimeOutline,
+  IoClose,
+  IoDocumentTextOutline,
+} from "react-icons/io5";
 import { FaMotorcycle, FaMapMarkerAlt, FaListUl } from "react-icons/fa";
 import Navbar from "../../components/Navbar";
 import ReviewSection from "../../components/ReviewSection";
@@ -99,7 +105,10 @@ const OrderDetails = () => {
       return { label: "Arriving soon", time: "Expected Soon" };
     }
     return {
-      label: order?.deliveryStatus === "Out For Delivery" ? "Order on its way" : "Preparing your order",
+      label:
+        order?.deliveryStatus === "Out For Delivery"
+          ? "Order on its way"
+          : "Preparing your order",
       time: `Expected in ${diffMins} mins`,
     };
   };
@@ -157,14 +166,6 @@ const OrderDetails = () => {
     }
   }, []);
 
-  const Badge = ({ bg, text, icon, children }) => (
-    <div
-      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold ${bg} ${text}`}
-    >
-      {icon} {children}
-    </div>
-  );
-
   if (loading)
     return (
       <div className="flex flex-col items-center justify-center min-h-[100vh] dark:bg-gray-900">
@@ -189,12 +190,53 @@ const OrderDetails = () => {
       <Navbar />
 
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-6 px-2 sm:px-6">
+        {order?.deliveryAlert === "Raining" && (
+          <div className="relative overflow-hidden rounded-2xl mt-3 border border-blue-400/30 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 p-4 shadow-lg">
+            {/* Lightning Flash */}
+            <div className="lightning"></div>
+
+            {/* Falling Rain Drops */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {[...Array(40)].map((_, i) => (
+                <span
+                  key={i}
+                  className="absolute rain-drop"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    animationDelay: `${Math.random() * 1}s`,
+                    animationDuration: `${0.35 + Math.random() * 0.4}s`,
+                    opacity: 0.2 + Math.random() * 0.4,
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Content */}
+            <div className="relative z-10 flex items-center gap-3">
+              <div className="text-3xl">⛈️</div>
+
+              <div>
+                <h4 className="text-sm font-bold text-white">
+                  Rain’s going wild outside 🌧️☔
+                </h4>
+
+                <p className="text-xs text-blue-100 leading-5 mt-1">
+                  It’s raining in your area 😵‍💫. Your order may take a little
+                  longer as our delivery partners are driving safe through the
+                  chaos. Stay cozy & stay dry 💙
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 sm:p-6 mt-4">
           {/* Header */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Order #{order?.id}</h2>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+                  Order #{order?.id}
+                </h2>
               </div>
               <button
                 onClick={refreshOrder}
@@ -262,8 +304,12 @@ const OrderDetails = () => {
                   className="w-full flex items-center justify-between py-2 transition hover:opacity-70"
                 >
                   <div className="flex flex-col items-start">
-                    <span className="text-base font-bold text-gray-800 dark:text-gray-200">Address</span>
-                    <span className="text-[11px] text-gray-500 dark:text-gray-400">View delivery details</span>
+                    <span className="text-base font-bold text-gray-800 dark:text-gray-200">
+                      Address
+                    </span>
+                    <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                      View delivery details
+                    </span>
                   </div>
                   <motion.div
                     animate={{ rotate: openAddress ? 180 : 0 }}
@@ -282,11 +328,18 @@ const OrderDetails = () => {
                     >
                       <div className="py-2 text-sm text-gray-600 dark:text-gray-400 space-y-0.5">
                         <p className="flex items-center gap-2">
-                          <span className="font-medium text-gray-800 dark:text-gray-200">{order?.shippingAddress?.fullName}</span>
-                          <span className="text-gray-300 dark:text-gray-600">•</span>
+                          <span className="font-medium text-gray-800 dark:text-gray-200">
+                            {order?.shippingAddress?.fullName}
+                          </span>
+                          <span className="text-gray-300 dark:text-gray-600">
+                            •
+                          </span>
                           <span>{order?.shippingAddress?.phone}</span>
                         </p>
-                        <p className="text-xs opacity-80">{order?.shippingAddress?.addressLine}, {order?.shippingAddress?.area}</p>
+                        <p className="text-xs opacity-80">
+                          {order?.shippingAddress?.addressLine},{" "}
+                          {order?.shippingAddress?.area}
+                        </p>
                       </div>
                     </motion.div>
                   )}
@@ -300,8 +353,12 @@ const OrderDetails = () => {
                   className="w-full flex items-center justify-between py-2 transition hover:opacity-70"
                 >
                   <div className="flex flex-col items-start">
-                    <span className="text-base font-bold text-gray-800 dark:text-gray-200">Items</span>
-                    <span className="text-[11px] text-gray-500 dark:text-gray-400">View ordered items</span>
+                    <span className="text-base font-bold text-gray-800 dark:text-gray-200">
+                      Items
+                    </span>
+                    <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                      View ordered items
+                    </span>
                   </div>
                   <motion.div
                     animate={{ rotate: openItems ? 180 : 0 }}
@@ -321,9 +378,16 @@ const OrderDetails = () => {
                       <div className="py-2">
                         <ul className="space-y-1.5">
                           {order?.items?.map((item, index) => (
-                            <li key={index} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                              <span className="font-medium text-gray-700 dark:text-gray-300">{item?.product?.name}</span>
-                              <span className="text-gray-400 font-bold">x {item?.quantity}</span>
+                            <li
+                              key={index}
+                              className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400"
+                            >
+                              <span className="font-medium text-gray-700 dark:text-gray-300">
+                                {item?.product?.name}
+                              </span>
+                              <span className="text-gray-400 font-bold">
+                                x {item?.quantity}
+                              </span>
                             </li>
                           ))}
                         </ul>
@@ -335,16 +399,24 @@ const OrderDetails = () => {
             </div>
           </div>
 
-
-
           {/* Order Note */}
           {order?.orderNote && (
             <div className="mb-8 relative pl-10 pr-4 py-2 group">
               {/*  Gradient Curved Line */}
               <div className="absolute left-0 top-0 h-full w-8">
-                <svg className="h-full w-full" viewBox="0 0 24 100" preserveAspectRatio="none">
+                <svg
+                  className="h-full w-full"
+                  viewBox="0 0 24 100"
+                  preserveAspectRatio="none"
+                >
                   <defs>
-                    <linearGradient id="sexyCurve" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <linearGradient
+                      id="sexyCurve"
+                      x1="0%"
+                      y1="0%"
+                      x2="0%"
+                      y2="100%"
+                    >
                       <stop offset="0%" stopColor="#34d399" stopOpacity="0" />
                       <stop offset="20%" stopColor="#10b981" />
                       <stop offset="50%" stopColor="#059669" />
@@ -360,8 +432,20 @@ const OrderDetails = () => {
                     strokeLinecap="round"
                   />
                   {/* Decorative Dots */}
-                  <circle cx="16" cy="20" r="1.5" fill="#10b981" className="animate-pulse" />
-                  <circle cx="16" cy="80" r="1.5" fill="#10b981" className="animate-pulse" />
+                  <circle
+                    cx="16"
+                    cy="20"
+                    r="1.5"
+                    fill="#10b981"
+                    className="animate-pulse"
+                  />
+                  <circle
+                    cx="16"
+                    cy="80"
+                    r="1.5"
+                    fill="#10b981"
+                    className="animate-pulse"
+                  />
                 </svg>
               </div>
 
