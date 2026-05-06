@@ -329,13 +329,13 @@ router.post("/user-login", async (req, res) => {
 
     const isProduction = process.env.NODE_ENV === "production";
 
-    const cookieOptions = {
-      expires: new Date(Date.now() + maxAge),
+    res.cookie("authToken", token, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: "Lax",
+      sameSite: isProduction ? "None" : "Lax",
+      expires: new Date(Date.now() + maxAge),
       path: "/",
-    };
+    });
 
     res.cookie("authToken", token, cookieOptions);
 
