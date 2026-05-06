@@ -9,7 +9,7 @@ const Terms = () => {
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4 pb-20 lg:pb-4">
         <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
           <h1 className="text-3xl font-bold mb-6 text-center text-green-600">
-            Terms & Conditions
+            Terms & Conditions (T&C)
           </h1>
 
           <p className="mb-4">

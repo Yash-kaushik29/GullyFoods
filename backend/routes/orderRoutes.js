@@ -103,17 +103,17 @@ router.post("/create-order", authenticateUser, async (req, res) => {
 
     await newOrder.save();
 
-    await sendTelegramMessage(`
-    🛒 <b>NEW ORDER RECEIVED</b>
+//     await sendTelegramMessage(`
+//     🛒 <b>NEW ORDER RECEIVED</b>
     
-    📦 Order ID: <b>#${newOrder?.id || "N/A"}</b>
-    💰 Amount: ₹${newOrder?.totalAmount}
-    🔗 <a href="https://gullyfoods.app/viewOrder/${newOrder?.id}">
-View Order Details
-</a>
+//     📦 Order ID: <b>#${newOrder?.id || "N/A"}</b>
+//     💰 Amount: ₹${newOrder?.totalAmount}
+//     🔗 <a href="https://gullyfoods.app/viewOrder/${newOrder?.id}">
+// View Order Details
+// </a>
     
-    ⏰ ${new Date().toLocaleString("en-IN")}
-    `);
+//     ⏰ ${new Date().toLocaleString("en-IN")}
+//     `);
 
     // ✅ Clear cart
     const updateCart = {
