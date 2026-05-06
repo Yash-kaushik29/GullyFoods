@@ -337,8 +337,6 @@ router.post("/user-login", async (req, res) => {
       path: "/",
     });
 
-    res.cookie("authToken", token, cookieOptions);
-
     // ✅ Store FCM token if provided - in background
     if (req.body.fcmToken) {
       User.updateOne(
