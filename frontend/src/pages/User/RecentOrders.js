@@ -8,8 +8,8 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { toast } from "react-toastify";
 
 const OrderCard = ({ order }) => {
-  const totalItems = order.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
-  const shopName = order.items?.[0]?.product?.shopName || "Multiple Shops";
+  const totalItems = order.totalQuantity || 0;
+  const shopName = order.shopName || "Shop";
 
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString(undefined, {
@@ -53,7 +53,7 @@ const OrderCard = ({ order }) => {
       <div className="space-y-2">
         <div className="flex justify-between items-center text-sm">
           <span className="text-gray-500 dark:text-gray-400">Shop</span>
-          <span className="font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">
+          <span className="font-semibold text-gray-800 dark:text-gray-200 ">
             {shopName}
           </span>
         </div>

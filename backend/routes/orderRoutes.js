@@ -648,12 +648,8 @@ router.get("/getUserOrders", authenticateUser, async (req, res) => {
       user: existingUser._id,
     })
       .populate({
-        path: "items.seller",
-        select: "shop",
-        populate: {
-          path: "shop",
-          select: "name",
-        },
+        path: "items.product",
+        select: "shopName",
       })
       .select("id items totalAmount deliveryStatus createdAt")
       .sort({ createdAt: -1 })
@@ -661,15 +657,17 @@ router.get("/getUserOrders", authenticateUser, async (req, res) => {
       .limit(limit);
 
     const formattedOrders = orders.map((order) => {
-      const firstSeller = order.items?.[0]?.seller;
+      const firstProduct = order.items?.[0]?.product;
+      
 
       return {
+        _id: order._id,
         id: order.id,
         totalAmount: order.totalAmount,
         deliveryStatus: order.deliveryStatus,
         createdAt: order.createdAt,
-        cartLength: order.items.length,
-        shopName: firstSeller?.shop?.shopName || "Shop",
+        totalQuantity: order.items.length,
+        shopName: firstProduct?.shopName || "Shop",
       };
     });
 
