@@ -8,6 +8,9 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { toast } from "react-toastify";
 
 const OrderCard = ({ order }) => {
+  const totalItems = order.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
+  const shopName = order.items?.[0]?.product?.shopName || "Multiple Shops";
+
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString(undefined, {
       year: "numeric",
@@ -48,6 +51,20 @@ const OrderCard = ({ order }) => {
       </h2>
 
       <div className="space-y-2">
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-gray-500 dark:text-gray-400">Shop</span>
+          <span className="font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[150px]">
+            {shopName}
+          </span>
+        </div>
+
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-gray-500 dark:text-gray-400">Total Items</span>
+          <span className="font-semibold text-gray-800 dark:text-gray-200">
+            {totalItems} {totalItems === 1 ? "item" : "items"}
+          </span>
+        </div>
+
         <div className="flex justify-between items-center text-sm">
           <span className="text-gray-500 dark:text-gray-400">Total</span>
           <span className="font-bold text-green-600 dark:text-green-400">
