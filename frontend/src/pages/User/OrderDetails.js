@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { IoCheckmarkCircleOutline, IoCloseCircleOutline, IoTimeOutline, IoClose } from "react-icons/io5";
+import { IoCheckmarkCircleOutline, IoCloseCircleOutline, IoTimeOutline, IoClose, IoDocumentTextOutline } from "react-icons/io5";
 import { FaMotorcycle, FaMapMarkerAlt, FaListUl } from "react-icons/fa";
 import Navbar from "../../components/Navbar";
 import ReviewSection from "../../components/ReviewSection";
@@ -248,6 +248,13 @@ const OrderDetails = () => {
               )}
 
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
+              {/* Review Section */}
+              {order?.deliveryStatus === "Delivered" && (
+                <div className="py-6 border-b border-gray-100 dark:border-gray-800">
+                  <ReviewSection order={order} />
+                </div>
+              )}
+
               {/* Delivery Address Dropdown */}
               <div className="py-2">
                 <button
@@ -328,15 +335,50 @@ const OrderDetails = () => {
             </div>
           </div>
 
-          {/* Review Section */}
-          {order?.deliveryStatus === "Delivered" && (
-            <ReviewSection order={order} />
-          )}
 
+
+          {/* Order Note */}
+          {order?.orderNote && (
+            <div className="mb-8 relative pl-10 pr-4 py-2 group">
+              {/*  Gradient Curved Line */}
+              <div className="absolute left-0 top-0 h-full w-8">
+                <svg className="h-full w-full" viewBox="0 0 24 100" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="sexyCurve" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#34d399" stopOpacity="0" />
+                      <stop offset="20%" stopColor="#10b981" />
+                      <stop offset="50%" stopColor="#059669" />
+                      <stop offset="80%" stopColor="#10b981" />
+                      <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M16 0 C 24 30, 24 70, 16 100"
+                    stroke="url(#sexyCurve)"
+                    strokeWidth="3"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                  {/* Decorative Dots */}
+                  <circle cx="16" cy="20" r="1.5" fill="#10b981" className="animate-pulse" />
+                  <circle cx="16" cy="80" r="1.5" fill="#10b981" className="animate-pulse" />
+                </svg>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-green-600/60 dark:text-green-400/50">
+                  Kitchen Note
+                </span>
+                <p className="text-base font-medium text-gray-800 dark:text-gray-200 leading-relaxed italic tracking-tight">
+                  {order.orderNote}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Savings Highlight */}
           {totals.discount > 0 && (
-            <div className="mb-4 p-3 rounded-lg bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-semibold">
+            <div className="mb-4 p-3 rounded-xl bg-green-600 text-white font-bold text-center shadow-lg shadow-green-500/20">
               🎉 You saved {formatPrice(totals.discount)} on this order
             </div>
           )}

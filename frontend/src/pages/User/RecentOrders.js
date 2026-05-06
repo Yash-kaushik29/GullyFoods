@@ -35,25 +35,29 @@ const OrderCard = ({ order }) => {
   };
 
   return (
-    <div className="group relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-2xl border border-white/40 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 p-4 overflow-hidden">
+    <div className="group relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-2xl border border-white/40 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 p-4 overflow-hidden flex flex-col">
+      {/* Ghost Link - Makes entire card clickable */}
+      <Link 
+        to={`/order/${order._id}`} 
+        className="absolute inset-0 z-10"
+        aria-label={`View details for order ${order.id}`}
+      />
+
       {/* Decorative Gradient Glow */}
-      <div className="absolute -top-10 -right-10 w-32 h-32 bg-green-500/5 rounded-full blur-3xl group-hover:bg-green-500/10 transition-colors" />
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-green-500/5 rounded-full blur-3xl group-hover:bg-green-500/10 transition-colors pointer-events-none" />
       
-      <h2 className="text-lg font-semibold mb-3 flex items-center justify-between">
+      <div className="flex items-center justify-between text-lg font-semibold mb-3">
         <span className="text-gray-500 dark:text-gray-400 text-xs">Order ID</span>
-        <Link
-          to={`/order/${order._id}`}
-          className="text-blue-500 hover:text-blue-600 transition flex items-center gap-1 hover:underline"
-        >
+        <div className="text-blue-500 flex items-center gap-1">
           #{order.id}
           <MdOutlineArrowOutward className="text-base group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-        </Link>
-      </h2>
+        </div>
+      </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 flex-1">
         <div className="flex justify-between items-center text-sm">
           <span className="text-gray-500 dark:text-gray-400">Shop</span>
-          <span className="font-semibold text-gray-800 dark:text-gray-200 ">
+          <span className="font-semibold text-gray-800 dark:text-gray-200">
             {shopName}
           </span>
         </div>
@@ -89,6 +93,7 @@ const OrderCard = ({ order }) => {
             <button 
               onClick={async (e) => {
                 e.preventDefault();
+                e.stopPropagation(); // Prevents card link from triggering
                 try {
                   const { data } = await api.post(`/api/order/reorder/${order._id}`);
                   if (data.success) {
@@ -102,7 +107,7 @@ const OrderCard = ({ order }) => {
                   console.error(err);
                 }
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold transition-all active:scale-95 shadow-sm hover:shadow-green-500/20"
+              className="relative z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold transition-all active:scale-95 shadow-sm hover:shadow-green-500/20"
             >
               <MdRefresh className="text-base" />
               REORDER
