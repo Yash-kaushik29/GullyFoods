@@ -644,19 +644,38 @@ router.get("/getUserOrders", authenticateUser, async (req, res) => {
     const totalOrders = await Order.countDocuments({ user: existingUser._id });
     const totalPages = Math.ceil(totalOrders / limit);
 
-    const orders = await Order.find({ user: existingUser._id })
+    const orders = await Order.find({
+      user: existingUser._id,
+    })
       .populate({
-        path: "items.product",
-        select: "id name price",
+        path: "items.seller",
+        select: "shop",
+        populate: {
+          path: "shop",
+          select: "name",
+        },
       })
       .select("id items totalAmount deliveryStatus createdAt")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
 
+    const formattedOrders = orders.map((order) => {
+      const firstSeller = order.items?.[0]?.seller;
+
+      return {
+        id: order.id,
+        totalAmount: order.totalAmount,
+        deliveryStatus: order.deliveryStatus,
+        createdAt: order.createdAt,
+        cartLength: order.items.length,
+        shopName: firstSeller?.shop?.shopName || "Shop",
+      };
+    });
+
     res.json({
       success: true,
-      orders,
+      orders: formattedOrders,
       totalPages,
       currentPage: page,
     });
