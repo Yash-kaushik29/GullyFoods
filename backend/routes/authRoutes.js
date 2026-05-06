@@ -65,7 +65,7 @@ router.post("/send-otp", async (req, res) => {
       {},
       {
         headers: { authToken: process.env.MESSAGECENTRAL_AUTH_TOKEN },
-      }
+      },
     );
 
     const result = response.data;
@@ -149,12 +149,12 @@ router.post("/user-signup", async (req, res) => {
 
     // Create new user
     const newUser = new User({ username, phone, activeCoupons });
-    
+
     // ✅ Store FCM token if provided
     if (req.body.fcmToken) {
       newUser.fcmTokens = [req.body.fcmToken];
     }
-    
+
     await newUser.save();
 
     const token = jwt.sign(
@@ -164,7 +164,7 @@ router.post("/user-signup", async (req, res) => {
         phone: newUser.phone || "",
       },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: "90d" }
+      { expiresIn: "90d" },
     );
 
     // Delete OTP after successful signup
@@ -235,7 +235,7 @@ router.post("/send-login-otp", async (req, res) => {
       {},
       {
         headers: { authToken: process.env.MESSAGECENTRAL_AUTH_TOKEN },
-      }
+      },
     );
 
     const result = response.data;
@@ -284,7 +284,10 @@ router.post("/user-login", async (req, res) => {
     if (!existingUser) {
       return res
         .status(400)
-        .json({ success: false, message: "Please Signup first from below link!" });
+        .json({
+          success: false,
+          message: "Please Signup first from below link!",
+        });
     }
 
     const existingOtp = await Otp.findOne({ phone, otpFor: "login" });
@@ -319,13 +322,12 @@ router.post("/user-login", async (req, res) => {
         phone: existingUser.phone,
       },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: "90d" }
+      { expiresIn: "90d" },
     );
 
     const maxAge = 90 * 24 * 60 * 60 * 1000;
 
     const isProduction = process.env.NODE_ENV === "production";
-    const domainName = isProduction ? "gullyfoods.app" : "localhost";
 
     const cookieOptions = {
       expires: new Date(Date.now() + maxAge),
@@ -333,7 +335,6 @@ router.post("/user-login", async (req, res) => {
       secure: isProduction,
       sameSite: "Lax",
       path: "/",
-      domain: domainName,
     };
 
     res.cookie("authToken", token, cookieOptions);
@@ -342,8 +343,12 @@ router.post("/user-login", async (req, res) => {
     if (req.body.fcmToken) {
       User.updateOne(
         { _id: existingUser._id },
-        { $addToSet: { fcmTokens: req.body.fcmToken } }
-      ).exec().catch(err => console.error("Error saving FCM token during login:", err));
+        { $addToSet: { fcmTokens: req.body.fcmToken } },
+      )
+        .exec()
+        .catch((err) =>
+          console.error("Error saving FCM token during login:", err),
+        );
     }
 
     res.json({
@@ -404,7 +409,7 @@ router.post("/seller-signup", async (req, res) => {
           sellerID: newSeller._id,
         },
         process.env.JWT_SECRET_KEY,
-        { expiresIn: "15d" }
+        { expiresIn: "15d" },
       );
       const maxAge = 15 * 24 * 60 * 60 * 1000;
 
@@ -446,7 +451,7 @@ router.post("/seller-login", async (req, res) => {
             sellerID: existingSeller._id,
           },
           process.env.JWT_SECRET_KEY,
-          { expiresIn: "15d" }
+          { expiresIn: "15d" },
         );
         const maxAge = 15 * 24 * 60 * 60 * 1000;
 
@@ -556,7 +561,7 @@ router.get("/getSellerDetails", authenticateSeller, async (req, res) => {
 
     const todaySalesTotal = todaySales.reduce(
       (sum, entry) => sum + entry.amount,
-      0
+      0,
     );
 
     const responseData = {
@@ -615,7 +620,7 @@ router.post("/switch-to-seller", async (req, res) => {
         sellerID: existingSeller._id,
       },
       process.env.JWT_SECRET_KEY,
-      { expiresIn: "15d" }
+      { expiresIn: "15d" },
     );
     const maxAge = 15 * 24 * 60 * 60 * 1000;
 
