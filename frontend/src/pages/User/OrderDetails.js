@@ -316,7 +316,7 @@ const OrderDetails = () => {
                           {order?.items?.map((item, index) => (
                             <li key={index} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                               <span className="font-medium text-gray-700 dark:text-gray-300">{item?.product?.name}</span>
-                              <span className="text-xs text-gray-400 font-bold">x{item?.quantity}</span>
+                              <span className="text-gray-400 font-bold">x {item?.quantity}</span>
                             </li>
                           ))}
                         </ul>
