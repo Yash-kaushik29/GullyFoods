@@ -2,9 +2,10 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar";
 import { Link } from "react-router-dom";
-import { MdOutlineArrowOutward, MdAccessTimeFilled } from "react-icons/md";
+import { MdOutlineArrowOutward, MdAccessTimeFilled, MdRefresh } from "react-icons/md";
 import api from "../../utils/axiosInstance";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { toast } from "react-toastify";
 
 const OrderCard = ({ order }) => {
   const formatDate = (dateString) =>
@@ -31,30 +32,56 @@ const OrderCard = ({ order }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-1 p-6">
-      <h2 className="text-xl font-semibold mb-2 flex items-center">
-        Order ID:
+    <div className="group relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg rounded-2xl border border-white/40 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 p-4 overflow-hidden">
+      {/* Decorative Gradient Glow */}
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-green-500/5 rounded-full blur-3xl group-hover:bg-green-500/10 transition-colors" />
+      
+      <h2 className="text-lg font-semibold mb-3 flex items-center justify-between">
+        <span className="text-gray-500 dark:text-gray-400 text-xs">Order ID</span>
         <Link
           to={`/order/${order._id}`}
-          className="text-blue-500 hover:text-blue-600 transition ml-1 flex items-center hover:underline"
+          className="text-blue-500 hover:text-blue-600 transition flex items-center gap-1 hover:underline"
         >
           #{order.id}
-          <MdOutlineArrowOutward className="text-xl hover:translate-x-1 transition-transform" />
+          <MdOutlineArrowOutward className="text-base group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
         </Link>
       </h2>
-      <p className="mb-2">
-        Total Amount:{" "}
-        <span className="text-green-600 font-bold">₹{order.totalAmount}</span>
-      </p>
-      <p className="mb-2">
-        Delivery Status:{" "}
-        <span className={getStatusColor(order.deliveryStatus)}>
-          {order.deliveryStatus}
-        </span>
-      </p>
-      <p className="text-sm text-gray-600 dark:text-gray-400">
-        Order Date: {formatDate(order.createdAt)}
-      </p>
+
+      <div className="space-y-2">
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-gray-500 dark:text-gray-400">Total</span>
+          <span className="font-bold text-green-600 dark:text-green-400">
+            ₹{order.totalAmount}
+          </span>
+        </div>
+
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-gray-500 dark:text-gray-400">Status</span>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-md bg-gray-50/50 dark:bg-gray-900/30 ${getStatusColor(order.deliveryStatus)}`}>
+            {order.deliveryStatus}
+          </span>
+        </div>
+
+        <div className="pt-3 border-t border-gray-100 dark:border-gray-700/50 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500">
+              <MdAccessTimeFilled className="text-gray-300 dark:text-gray-600" />
+              <span>{formatDate(order.createdAt)}</span>
+            </div>
+            
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                toast.info("Reordering your items...");
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold transition-all active:scale-95 shadow-sm hover:shadow-green-500/20"
+            >
+              <MdRefresh className="text-base" />
+              REORDER
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -73,7 +100,7 @@ const RecentOrders = () => {
         setLoading(true);
 
         const { data } = await api.get(
-          `/api/order/getUserOrders?page=${page}&limit=5`,
+          `/api/order/getUserOrders?page=${page}&limit=6`,
           {
             withCredentials: true,
           }
@@ -160,10 +187,23 @@ const RecentOrders = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 pb-16">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#0f172a] text-gray-900 dark:text-gray-100 pb-16 relative overflow-hidden">
+      {/* Background Decorative Blobs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/10 dark:bg-blue-600/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-green-400/10 dark:bg-green-600/5 rounded-full blur-[100px] pointer-events-none" />
+
       <Navbar />
-      <div className="max-w-5xl mx-auto p-4">
-        <h1 className="text-3xl font-bold text-center mb-8">Recent Orders</h1>
+      
+      {/* Sticky Glass Header */}
+      <header className="sticky top-0 z-30 w-full bg-white/70 dark:bg-gray-900/70 backdrop-blur-lg border-b border-white/20 dark:border-gray-800/50 shadow-sm mb-4">
+        <div className="max-w-5xl mx-auto px-4 py-4">
+          <h1 className="text-xl md:text-2xl font-bold text-center text-gray-900 dark:text-white">
+            Recent Orders
+          </h1>
+        </div>
+      </header>
+
+      <div className="max-w-5xl mx-auto p-4 relative z-10">
 
         {loading ? (
           <div className="flex flex-col justify-center items-center py-6 space-y-5">
