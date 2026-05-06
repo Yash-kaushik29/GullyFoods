@@ -710,4 +710,41 @@ router.get("/active", authenticateUser, async (req, res) => {
   }
 });
 
+router.post("/reorder/:orderId", authenticateUser, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const userId = req.user._id;
+
+    // 1. Find the original order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // 2. Prepare the items for the cart
+    const itemsToCart = order.items.map((item) => ({
+      productId: item.product.toString(),
+      quantity: item.quantity,
+    }));
+
+    // 3. Determine which cart to update
+    const cartField = order.orderType === "Grocery" ? "groceryCart" : "foodCart";
+
+    // 4. Add items to the user's cart
+    // We use $push with $each to append all items at once
+    await User.findByIdAndUpdate(userId, {
+      $push: { [cartField]: { $each: itemsToCart } },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Items added to cart successfully",
+      redirectUrl: order.orderType === "Grocery" ? "/cart?type=grocery" : "/cart",
+    });
+  } catch (error) {
+    console.error("Reorder error:", error);
+    res.status(500).json({ success: false, message: "Failed to reorder items" });
+  }
+});
+
 module.exports = router;

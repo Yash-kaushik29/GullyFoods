@@ -87,9 +87,20 @@ const OrderCard = ({ order }) => {
             </div>
             
             <button 
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.preventDefault();
-                toast.info("Reordering your items...");
+                try {
+                  const { data } = await api.post(`/api/order/reorder/${order._id}`);
+                  if (data.success) {
+                    toast.success("Items added to cart!");
+                    setTimeout(() => {
+                      window.location.href = data.redirectUrl || "/cart";
+                    }, 1000);
+                  }
+                } catch (err) {
+                  toast.error("Failed to reorder items");
+                  console.error(err);
+                }
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold transition-all active:scale-95 shadow-sm hover:shadow-green-500/20"
             >
