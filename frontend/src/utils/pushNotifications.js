@@ -19,9 +19,9 @@ export async function requestNotificationPermission() {
     }
 
     // ✅ Get or register the messaging service worker with config in query params
-    const swUrl = `/firebase-messaging-sw.js?apiKey=${process.env.REACT_APP_FIREBASE_CONFIG_KEY}&messagingSenderId=665093061382&appId=1:665093061382:web:80464457e6a547c675fc87`;
+    const swUrl = "/firebase-messaging-sw.js";
     
-    let registration = await navigator.serviceWorker.getRegistration("/firebase-messaging-sw.js");
+    let registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration || !registration.active) {
       registration = await navigator.serviceWorker.register(swUrl);
       console.log("Messaging service worker registered:", registration.scope);
@@ -59,7 +59,7 @@ export async function registerPushToken() {
     }
 
     // ✅ Get or register the messaging service worker
-    const swUrl = `/firebase-messaging-sw.js?apiKey=${process.env.REACT_APP_FIREBASE_CONFIG_KEY}&messagingSenderId=665093061382&appId=1:665093061382:web:80464457e6a547c675fc87`;
+    const swUrl = "/firebase-messaging-sw.js";
     
     let registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration) {
@@ -95,7 +95,7 @@ export async function registerDeliveryBoyPushToken() {
     }
 
     // ✅ Get or register the messaging service worker
-    const swUrl = `/firebase-messaging-sw.js?apiKey=${process.env.REACT_APP_FIREBASE_CONFIG_KEY}&messagingSenderId=665093061382&appId=1:665093061382:web:80464457e6a547c675fc87`;
+    const swUrl = "/firebase-messaging-sw.js";
     
     let registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration) {
@@ -122,7 +122,7 @@ export async function unregisterPushToken() {
 
   try {
     // ✅ Get or register the messaging service worker
-    const swUrl = `/firebase-messaging-sw.js?apiKey=${process.env.REACT_APP_FIREBASE_CONFIG_KEY}&messagingSenderId=665093061382&appId=1:665093061382:web:80464457e6a547c675fc87`;
+    const swUrl = "/firebase-messaging-sw.js";
 
     let registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration) {
@@ -149,7 +149,7 @@ export async function unregisterDeliveryBoyPushToken() {
 
   try {
     // ✅ Get or register the messaging service worker
-    const swUrl = `/firebase-messaging-sw.js?apiKey=${process.env.REACT_APP_FIREBASE_CONFIG_KEY}&messagingSenderId=665093061382&appId=1:665093061382:web:80464457e6a547c675fc87`;
+    const swUrl = "/firebase-messaging-sw.js";
 
     const registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration) return;
