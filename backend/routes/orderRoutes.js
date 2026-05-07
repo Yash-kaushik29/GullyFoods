@@ -15,6 +15,7 @@ const {
   sendOrderStatusNotification,
   sendDeliveryBoyNotification,
 } = require("../config/firebase.config");
+const DeliveryAlert = require("../models/deliveryAlert");
 
 const calculateExpectedDeliveryTime = (orderType, itemCount, distance) => {
   console.log(orderType, itemCount, distance);
@@ -140,6 +141,10 @@ router.post("/create-order", authenticateUser, async (req, res) => {
       distance,
     );
 
+    const activeDeliveryAlert = await DeliveryAlert.findOne({
+      isHappening: true,
+    }).sort({ priority: -1 });
+
     const newOrder = new Order({
       user: userId,
       items: orderItems,
@@ -158,6 +163,7 @@ router.post("/create-order", authenticateUser, async (req, res) => {
       sellersNotified,
       orderNote,
       expectedDeliveryTime,
+      deliveryAlert: activeDeliveryAlert.event || ""
     });
 
     await newOrder.save();
@@ -658,7 +664,6 @@ router.get("/getUserOrders", authenticateUser, async (req, res) => {
 
     const formattedOrders = orders.map((order) => {
       const firstProduct = order.items?.[0]?.product;
-      
 
       return {
         _id: order._id,
@@ -715,23 +720,27 @@ router.post("/reorder/:orderId", authenticateUser, async (req, res) => {
     const { orderId } = req.params;
     const userId = req.user._id;
 
-    // 1. Find the original order
     const order = await Order.findById(orderId);
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
     }
 
-    // 2. Prepare the items for the cart
     const itemsToCart = order.items.map((item) => ({
       productId: item.product.toString(),
       quantity: item.quantity,
     }));
 
-    // 3. Determine which cart to update
-    const cartField = order.orderType === "Grocery" ? "groceryCart" : "foodCart";
+    const cartField =
+      order.orderType === "Grocery" ? "groceryCart" : "foodCart";
 
-    // 4. Add items to the user's cart
-    // We use $push with $each to append all items at once
+    await User.findByIdAndUpdate(userId, {
+      $set: {
+        [cartField]: [],
+      },
+    });
+
     await User.findByIdAndUpdate(userId, {
       $push: { [cartField]: { $each: itemsToCart } },
     });
@@ -739,11 +748,14 @@ router.post("/reorder/:orderId", authenticateUser, async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Items added to cart successfully",
-      redirectUrl: order.orderType === "Grocery" ? "/cart?type=grocery" : "/cart",
+      redirectUrl:
+        order.orderType === "Grocery" ? "/cart?type=grocery" : "/cart",
     });
   } catch (error) {
     console.error("Reorder error:", error);
-    res.status(500).json({ success: false, message: "Failed to reorder items" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to reorder items" });
   }
 });
 

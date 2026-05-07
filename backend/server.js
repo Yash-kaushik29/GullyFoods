@@ -28,6 +28,7 @@ const pdfExportRoutes = require("./routes/pdfExportRoutes");
 const rateLimit = require("express-rate-limit");
 const Product = require("./models/Product.js");
 const User = require("./models/User.js");
+const DeliveryAlert = require("./models/deliveryAlert.js");
 
 const app = express();
 dotenv.config();

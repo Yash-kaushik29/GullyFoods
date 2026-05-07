@@ -17,6 +17,7 @@ import api from "../../utils/axiosInstance";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import DeliveryTimeline from "../../components/DeliveryTimeline";
 import { motion, AnimatePresence } from "framer-motion";
+import { HiDocumentCurrencyRupee } from "react-icons/hi2";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -102,7 +103,7 @@ const OrderDetails = () => {
     const diffMins = Math.ceil(diffMs / (1000 * 60));
 
     if (diffMins <= 0) {
-      return { label: "Arriving soon", time: "Expected Soon" };
+      return { label: "Almost There", time: "Expected Soon" };
     }
     return {
       label:
@@ -189,9 +190,8 @@ const OrderDetails = () => {
       <ToastContainer />
       <Navbar />
 
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-6 px-2 sm:px-6">
-        {order?.deliveryAlert === "Raining" && (
-          <div className="relative overflow-hidden rounded-2xl mt-3 border border-blue-400/30 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 p-4 shadow-lg">
+      {order?.deliveryAlert === "Raining" && (
+          <div className="relative overflow-hidden rounded-b-2xl border border-blue-400/30 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 p-4 shadow-lg">
             {/* Lightning Flash */}
             <div className="lightning"></div>
 
@@ -229,12 +229,14 @@ const OrderDetails = () => {
             </div>
           </div>
         )}
-        <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 sm:p-6 mt-4">
+
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 -mt-1 py-6 px-2 sm:px-6">
+        <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 sm:p-6">
           {/* Header */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+                <h2 className="text-xl font-bold text-gray-800 dark:text-white">
                   Order #{order?.id}
                 </h2>
               </div>
@@ -242,7 +244,7 @@ const OrderDetails = () => {
                 onClick={refreshOrder}
                 className="w-fit text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition font-medium border border-gray-200 dark:border-gray-600 shadow-sm"
               >
-                Refresh Status
+                Refresh
               </button>
             </div>
 
@@ -257,11 +259,6 @@ const OrderDetails = () => {
                   </p>
                 </div>
               )}
-
-              {order.deliveryStatus === "Delivered" &&
-                order.orderType === "Food" && (
-                  <DownloadInvoiceButton orderId={order._id} />
-                )}
             </div>
           </div>
 
@@ -276,132 +273,138 @@ const OrderDetails = () => {
           </div>
 
           {/* Action Buttons & Dropdowns */}
-          <div className="flex flex-col gap-4 mb-8">
-            {order?.deliveryStatus !== "Delivered" &&
-              order?.deliveryStatus !== "Cancelled" && (
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => setShowCancelPopup(true)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-10 py-3 rounded-2xl font-bold transition shadow-md hover:shadow-lg active:scale-95"
-                  >
-                    Cancel Order
-                  </button>
-                </div>
-              )}
+          <div className="space-y-3">
+            {order?.deliveryStatus === 'Delivered' && (
+              <ReviewSection order={order} />
+            )}
 
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {/* Review Section */}
-              {order?.deliveryStatus === "Delivered" && (
-                <div className="py-6 border-b border-gray-100 dark:border-gray-800">
-                  <ReviewSection order={order} />
-                </div>
-              )}
-
-              {/* Delivery Address Dropdown */}
-              <div className="py-2">
-                <button
-                  onClick={() => setOpenAddress(!openAddress)}
-                  className="w-full flex items-center justify-between py-2 transition hover:opacity-70"
-                >
-                  <div className="flex flex-col items-start">
-                    <span className="text-base font-bold text-gray-800 dark:text-gray-200">
-                      Address
+            <div>
+              <p className="text-sm font-semibold text-center mb-1" >Ordered from <span className="text-green-600 dark:text-green-500" >{order.items[0]?.product?.shopName}</span></p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-stone-100 dark:bg-zinc-700 overflow-hidden">
+              <button
+                onClick={() => setOpenAddress(!openAddress)}
+                className="w-full flex items-center justify-between px-4 py-3"
+              >
+                <div className="flex flex-col items-start">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                      Delivery Address
                     </span>
-                    <span className="text-[11px] text-gray-500 dark:text-gray-400">
-                      View delivery details
+
+                    <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                      Home
                     </span>
                   </div>
-                  <motion.div
-                    animate={{ rotate: openAddress ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <IoIosArrowDown className="text-gray-400 w-4 h-4" />
-                  </motion.div>
-                </button>
-                <AnimatePresence>
-                  {openAddress && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <div className="py-2 text-sm text-gray-600 dark:text-gray-400 space-y-0.5">
-                        <p className="flex items-center gap-2">
-                          <span className="font-medium text-gray-800 dark:text-gray-200">
-                            {order?.shippingAddress?.fullName}
-                          </span>
-                          <span className="text-gray-300 dark:text-gray-600">
-                            •
-                          </span>
-                          <span>{order?.shippingAddress?.phone}</span>
-                        </p>
-                        <p className="text-xs opacity-80">
-                          {order?.shippingAddress?.addressLine},{" "}
-                          {order?.shippingAddress?.area}
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
 
-              {/* View Items Dropdown */}
-              <div className="py-2">
-                <button
-                  onClick={() => setOpenItems(!openItems)}
-                  className="w-full flex items-center justify-between py-2 transition hover:opacity-70"
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">
+                    {order?.shippingAddress?.addressLine},{" "}
+                    {order?.shippingAddress?.area}
+                  </p>
+                </div>
+
+                <motion.div
+                  animate={{ rotate: openAddress ? 180 : 0 }}
+                  transition={{ duration: 0.25 }}
                 >
-                  <div className="flex flex-col items-start">
-                    <span className="text-base font-bold text-gray-800 dark:text-gray-200">
-                      Items
+                  <IoIosArrowDown className="text-gray-400 w-4 h-4" />
+                </motion.div>
+              </button>
+
+              <AnimatePresence>
+                {openAddress && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4 pt-1 text-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-gray-800 dark:text-gray-200">
+                          {order?.shippingAddress?.fullName}, {order?.shippingAddress?.phone}
+                        </span>
+                      </div>
+
+                      <p className="text-xs leading-5 text-gray-500 dark:text-gray-400">
+                        {order?.shippingAddress?.addressLine},{" "}
+                        {order?.shippingAddress?.area}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Items Card */}
+            <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-stone-100 dark:bg-zinc-700 overflow-hidden">
+              <button
+                onClick={() => setOpenItems(!openItems)}
+                className="w-full flex items-center justify-between px-4 py-3"
+              >
+                <div className="flex flex-col items-start">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                      Your Order
                     </span>
-                    <span className="text-[11px] text-gray-500 dark:text-gray-400">
-                      View ordered items
+
+                    <span className="px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-[10px] font-medium text-green-700 dark:text-green-300">
+                      {order?.items?.length} Items
                     </span>
                   </div>
+
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    {order?.items?.[0]?.product?.name}
+                    {order?.items?.length > 1 &&
+                      ` +${order?.items?.length - 1} more`}
+                  </p>
+                </div>
+
+                <motion.div
+                  animate={{ rotate: openItems ? 180 : 0 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <IoIosArrowDown className="text-gray-400 w-4 h-4" />
+                </motion.div>
+              </button>
+
+              <AnimatePresence>
+                {openItems && (
                   <motion.div
-                    animate={{ rotate: openItems ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden"
                   >
-                    <IoIosArrowDown className="text-gray-400 w-4 h-4" />
+                    <div className="px-4 pb-3 pt-1 space-y-2">
+                      {order?.items?.map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-medium text-gray-800 dark:text-gray-200">
+                              {item?.product?.name}
+                            </span>
+                          </div>
+
+                          <span className="text-xs font-semibold text-gray-400">
+                            ×{item?.quantity}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </motion.div>
-                </button>
-                <AnimatePresence>
-                  {openItems && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <div className="py-2">
-                        <ul className="space-y-1.5">
-                          {order?.items?.map((item, index) => (
-                            <li
-                              key={index}
-                              className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400"
-                            >
-                              <span className="font-medium text-gray-700 dark:text-gray-300">
-                                {item?.product?.name}
-                              </span>
-                              <span className="text-gray-400 font-bold">
-                                x {item?.quantity}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
           {/* Order Note */}
           {order?.orderNote && (
-            <div className="mb-8 relative pl-10 pr-4 py-2 group">
+            <div className="my-6 relative pl-10 pr-4 py-2 group">
               {/*  Gradient Curved Line */}
               <div className="absolute left-0 top-0 h-full w-8">
                 <svg
@@ -451,7 +454,7 @@ const OrderDetails = () => {
 
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-green-600/60 dark:text-green-400/50">
-                  Kitchen Note
+                  Order Instructions
                 </span>
                 <p className="text-base font-medium text-gray-800 dark:text-gray-200 leading-relaxed italic tracking-tight">
                   {order.orderNote}
@@ -467,56 +470,116 @@ const OrderDetails = () => {
             </div>
           )}
 
-          {/* Totals */}
-          <div className="my-6 text-right flex flex-col gap-1">
-            <p>
-              Cart Total:{" "}
-              <span className="text-green-500 ml-2 font-semibold">
-                {formatPrice(totals.amount)}
-              </span>
-            </p>
-            <p>
-              Tax:{" "}
-              <span className="text-green-500 ml-2 font-semibold">
-                {formatPrice(totals.taxes)}
-              </span>
-            </p>
-            <p>
-              Delivery Fee:{" "}
-              <span className="text-green-500 ml-2 font-semibold">
-                {formatPrice(totals.deliveryCharge)}
-              </span>
-            </p>
-            {order?.orderType === "Grocery" && (
-              <p>
-                Service Charge:{" "}
-                <span className="text-green-500 ml-2 font-semibold">
-                  {formatPrice(totals.serviceCharge)}
+          {/* Billing Summary */}
+          <div className="mt-8 rounded-3xl border border-gray-200/70 dark:border-gray-800 bg-stone-100/70 dark:bg-zinc-700/70 backdrop-blur-xl shadow-sm overflow-hidden">
+            {/* Header */}
+            <div className="flex gap-2 items-center px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+              <div className="flex items-center gap-1">
+                <HiDocumentCurrencyRupee className="text-green-500 text-lg" />
+                <h3 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">
+                  Billing Summary
+                </h3>
+              </div>
+              {order.orderType === "Food" && (
+                <DownloadInvoiceButton orderId={order._id} />
+              )}
+            </div>
+
+            {/* Billing Rows */}
+            <div className="px-5 py-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500 dark:text-gray-400">
+                  Cart Total
                 </span>
-              </p>
-            )}
-            <div className="h-[1px] bg-black dark:bg-white my-2" />
-            <p className="font-semibold text-lg">
-              Total:
-              <span className="text-green-700 dark:text-green-300 ml-2 font-bold">
-                {formatPrice(totals.totalAmount)}
-              </span>
-            </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {" "}
-              Payment Method:{" "}
-              <span className="font-medium ml-1">
-                {order?.paymentMethod}
-              </span>{" "}
-            </p>{" "}
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {" "}
-              Placed On:{" "}
-              <span className="font-medium ml-1">
-                {" "}
-                {new Date(order?.createdAt).toLocaleString()}{" "}
-              </span>{" "}
-            </p>
+
+                <span className="font-semibold text-gray-800 dark:text-gray-200">
+                  {formatPrice(totals.amount)}
+                </span>
+              </div>
+
+              {totals.taxes > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500 dark:text-gray-400">
+                    Taxes
+                  </span>
+
+                  <span className="font-semibold text-gray-800 dark:text-gray-200">
+                    {formatPrice(totals.taxes)}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500 dark:text-gray-400">
+                  Delivery Fee
+                </span>
+
+                <span className="font-semibold text-gray-800 dark:text-gray-200">
+                  {formatPrice(totals.deliveryCharge)}
+                </span>
+              </div>
+
+              {order?.orderType === "Grocery" && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500 dark:text-gray-400">
+                    Service Charge
+                  </span>
+
+                  <span className="font-semibold text-gray-800 dark:text-gray-200">
+                    {formatPrice(totals.serviceCharge)}
+                  </span>
+                </div>
+              )}
+
+              {totals.discount > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-green-600 dark:text-green-400 font-medium">
+                    Discount
+                  </span>
+
+                  <span className="font-bold text-green-600 dark:text-green-400">
+                    -{formatPrice(totals.discount)}
+                  </span>
+                </div>
+              )}
+
+              {/* Divider */}
+              <div className="h-px bg-gradient-to-r from-transparent via-gray-300/40 dark:via-gray-700/40 to-transparent my-1" />
+
+              {/* Total */}
+              <div className="flex items-center justify-between">
+                <span className="text-base font-bold text-gray-900 dark:text-white">
+                  Total Paid
+                </span>
+
+                <span className="text-lg font-semibold tracking-tight text-green-600 dark:text-green-400">
+                  {formatPrice(totals.totalAmount)}
+                </span>
+              </div>
+
+              {/* Footer Info */}
+              <div className="pt-3 mt-1 border-t border-gray-100 dark:border-gray-800 flex flex-col gap-1.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 dark:text-gray-400">
+                    Payment Method
+                  </span>
+
+                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                    {order?.paymentMethod}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 dark:text-gray-400">
+                    Placed On
+                  </span>
+
+                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                    {new Date(order?.createdAt).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
