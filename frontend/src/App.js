@@ -72,14 +72,23 @@ const App = () => {
     requestNotificationPermission();
 
     // Listen for foreground messages
-    listenForegroundMessages((payload) => {
+    listenForegroundMessages(async (payload) => {
       const { title, body } = payload.notification || {};
-      // Show browser notification
+      
+      // Show notification using the service worker (more reliable on mobile)
       if (Notification.permission === "granted") {
-        new Notification(title, {
-          body,
-          icon: "/icons/gullyfoodsLogo192.png",
-        });
+        const registration = await navigator.serviceWorker.getRegistration("/firebase-messaging-sw.js");
+        if (registration) {
+          registration.showNotification(title, {
+            body,
+            icon: "/icons/gullyfoodsLogo192.png",
+            badge: "/icons/gullyfoodsLogo192.png",
+            data: payload.data,
+          });
+        } else {
+          // Fallback to basic notification if SW not found
+          new Notification(title, { body, icon: "/icons/gullyfoodsLogo192.png" });
+        }
       }
     });
   }, []);
