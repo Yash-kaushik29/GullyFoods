@@ -161,35 +161,38 @@ async function sendOrderStatusNotification(userId, orderId, orderObjectId, statu
   // Fetch tokens and order details in parallel
   const [userDoc, orderDoc] = await Promise.all([
     User.findById(userId).select("fcmTokens"),
-    Order.findById(orderObjectId).select("items totalPrice")
+    Order.findById(orderObjectId)
+      .select("items totalAmount id")
+      .populate("items.product", "name")
   ]);
 
   if (!userDoc || !userDoc.fcmTokens || userDoc.fcmTokens.length === 0) return;
   
   // Create a summary of items (e.g., "Burger, Coke")
-  const itemSummary = orderDoc?.items?.map(item => item.name).join(", ").substring(0, 50) || "your order";
-  const price = orderDoc ? ` (₹${orderDoc.totalPrice})` : "";
+  const itemSummary = orderDoc?.items?.map(item => item.product?.name || "Delicious Item").join(", ").substring(0, 50) || "your order";
+  const price = orderDoc ? ` (₹${orderDoc.totalAmount})` : "";
+  const displayId = orderDoc?.id ? `#${orderDoc.id}` : "";
 
   const statusMessages = {
     "Processing": {
-      title: "GullyFoods: Order Placed! 🎊",
-      body: `Your order for ${itemSummary}${price} is confirmed and being sent to the kitchen.`,
+      title: `Order Confirmed! ${displayId} 🎊`,
+      body: `Hooray! Your order for ${itemSummary}${price} is received and sent to the kitchen. Get ready! 😋`,
     },
     "Preparing": {
-      title: "GullyFoods: Chef is cooking! 👨‍🍳",
-      body: `Great news! Your ${itemSummary} is being freshly prepared right now.`,
+      title: "Chef is Cooking! 👨‍🍳",
+      body: `Great news! Your ${itemSummary} is being freshly prepared with love right now. ✨`,
     },
     "Out For Delivery": {
-      title: "GullyFoods: On the Way! 🛵",
-      body: `Your delicious ${itemSummary} has left the kitchen and is zooming towards you!`,
+      title: "On the Way! 🛵💨",
+      body: `Your delicious ${itemSummary} has left the kitchen and is zooming towards you! Stay close! 📍`,
     },
     "Delivered": {
-      title: "GullyFoods: Enjoy your meal! 😋",
-      body: `Your order for ${itemSummary} has been delivered. We hope you love it!`,
+      title: "Enjoy your meal! 😋✨",
+      body: `Bon appétit! Your order for ${itemSummary} has been delivered. We'd love to hear your feedback! ⭐`,
     },
     "Cancelled": {
-      title: "GullyFoods: Order Update",
-      body: `Your order for ${itemSummary} has been cancelled. Please check the app for details.`,
+      title: "Order Update ⚠️",
+      body: `Your order for ${itemSummary} has been cancelled. Tap here to see details or order something else! 📱`,
     },
   };
 
@@ -237,8 +240,8 @@ async function sendDeliveryBoyNotification(deliveryBoyId, orderId, orderObjectId
 
   await sendPushNotification(
     deliveryBoy.fcmTokens,
-    "GullyFoods: New Delivery! 🛵",
-    `A new order of ${area || "items"} is available! Tap to accept and start earning.`,
+    "New Order Available! 🛵💎",
+    `A fresh order in ${area || "your area"} is waiting. Grab it now and start earning! 💰`,
     { 
       orderId: orderId.toString(),
       orderObjectId: orderObjectId.toString(),
@@ -272,8 +275,8 @@ async function sendOrderCancellationNotification(userId, orderId, orderObjectId)
 
   await sendPushNotification(
     userDoc.fcmTokens,
-    "Order Cancelled",
-    `Your order #${orderId} has been cancelled.`,
+    "Order Cancelled ❌",
+    `Your order ${orderId ? "#" + orderId : ""} has been cancelled. We're sorry for the inconvenience! 🙏`,
     { 
       orderId: orderId.toString(),
       orderObjectId: orderObjectId.toString(),
