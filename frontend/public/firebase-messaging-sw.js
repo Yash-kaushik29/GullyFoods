@@ -1,6 +1,9 @@
 importScripts("https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js");
 importScripts("https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js");
 
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => event.waitUntil(clients.claim()));
+
 // Hardcoded config for maximum reliability
 const firebaseConfig = {
   apiKey: "AIzaSyCvK5AH-TE1DPObA5x3LLx5ePS10q1sBXw",
