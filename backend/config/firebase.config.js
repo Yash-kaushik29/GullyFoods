@@ -162,11 +162,26 @@ async function sendOrderStatusNotification(userId, orderId, orderObjectId, statu
   const [userDoc, orderDoc] = await Promise.all([
     User.findById(userId).select("fcmTokens"),
     Order.findById(orderObjectId)
-      .select("items totalAmount id")
+      .select("items totalAmount id user")
       .populate("items.product", "name")
   ]);
 
-  if (!userDoc || !userDoc.fcmTokens || userDoc.fcmTokens.length === 0) return;
+  if (!userDoc) {
+    console.log(`❌ Notification failed: User ${userId} not found in DB`);
+    return;
+  }
+  
+  if (!userDoc.fcmTokens || userDoc.fcmTokens.length === 0) {
+    console.log(`⚠️ Notification skipped: User ${userId} has NO registered FCM tokens`);
+    return;
+  }
+
+  if (!orderDoc) {
+    console.log(`❌ Notification failed: Order ${orderObjectId} not found in DB`);
+    return;
+  }
+
+  console.log(`🔔 Found ${userDoc.fcmTokens.length} tokens for user. Preparing ${status} notification...`);
   
   // Create a summary of items (e.g., "Burger, Coke")
   const itemSummary = orderDoc?.items?.map(item => item.product?.name || "Delicious Item").join(", ").substring(0, 50) || "your order";
