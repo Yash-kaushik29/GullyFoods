@@ -377,9 +377,21 @@ router.post("/register-token", authenticateUser, async (req, res) => {
 
     console.log(`Registering FCM token for user ${userId}: ${token.substring(0, 20)}...`);
 
+    // Remove token if it exists and push to the end, keeping only the last 3
     await User.updateOne(
       { _id: userId },
-      { $addToSet: { fcmTokens: token } } 
+      { $pull: { fcmTokens: token } }
+    );
+    await User.updateOne(
+      { _id: userId },
+      { 
+        $push: { 
+          fcmTokens: { 
+            $each: [token], 
+            $slice: -3 
+          } 
+        } 
+      }
     );
 
     console.log(`FCM token saved for user ${userId}`);

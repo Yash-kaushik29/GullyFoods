@@ -15,6 +15,20 @@ try {
     // Use service account JSON from environment variable
     console.log("Loading service account from environment variable");
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+    
+    // Fix private key formatting (extremely robust replacement)
+    if (serviceAccount.private_key) {
+      // Replaces literal '\n' strings and ensures actual newlines
+      serviceAccount.private_key = serviceAccount.private_key
+        .replace(/\\n/g, '\n')
+        .replace(/\n/g, '\n')
+        .trim();
+        
+      if (!serviceAccount.private_key.includes("-----BEGIN PRIVATE KEY-----")) {
+        console.error("Warning: Private key is missing PEM header!");
+      }
+    }
+
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });

@@ -65,10 +65,27 @@ router.post("/login", async (req, res) => {
 
     // ✅ Store FCM token if provided - in background
     if (req.body.fcmToken) {
-      DeliveryBoy.updateOne(
-        { _id: user._id },
-        { $addToSet: { fcmTokens: req.body.fcmToken } }
-      ).exec().catch(err => console.error("Error saving Delivery Boy FCM token during login:", err));
+      (async () => {
+        try {
+          await DeliveryBoy.updateOne(
+            { _id: user._id },
+            { $pull: { fcmTokens: req.body.fcmToken } }
+          );
+          await DeliveryBoy.updateOne(
+            { _id: user._id },
+            { 
+              $push: { 
+                fcmTokens: { 
+                  $each: [req.body.fcmToken], 
+                  $slice: -3 
+                } 
+              } 
+            }
+          );
+        } catch (err) {
+          console.error("Error saving Delivery Boy FCM token during login:", err);
+        }
+      })();
     }
 
     res.json({ success: true, message: "Login successful", token });
@@ -468,9 +485,21 @@ router.post("/register-token", async (req, res) => {
 
     console.log(`Registering FCM token for delivery boy ${deliveryBoyId}: ${token.substring(0, 20)}...`);
 
+    // Remove token if it exists and push to the end, keeping only the last 3
     await DeliveryBoy.updateOne(
       { _id: deliveryBoyId },
-      { $addToSet: { fcmTokens: token } }
+      { $pull: { fcmTokens: token } }
+    );
+    await DeliveryBoy.updateOne(
+      { _id: deliveryBoyId },
+      { 
+        $push: { 
+          fcmTokens: { 
+            $each: [token], 
+            $slice: -3 
+          } 
+        } 
+      }
     );
 
     console.log(`FCM token saved for delivery boy ${deliveryBoyId}`);
