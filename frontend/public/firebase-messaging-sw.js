@@ -1,54 +1,59 @@
-/* eslint-disable no-restricted-globals */
+importScripts("https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js");
+importScripts("https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js");
 
-importScripts("https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js");
+// Extract config from URL query parameters
+const urlParams = new URLSearchParams(self.location.search);
+const apiKey = urlParams.get("apiKey");
+const messagingSenderId = urlParams.get("messagingSenderId");
+const appId = urlParams.get("appId");
 
-firebase.initializeApp({
-  apiKey: "AIzaSyCvK5AH-TE1DPObA5x3LLx5ePS10q1sBXw",
-  authDomain: "gullyfoods.firebaseapp.com",
-  projectId: "gullyfoods",
-  storageBucket: "gullyfoods.firebasestorage.app",
-  messagingSenderId: "665093061382",
-  appId: "1:665093061382:web:80464457e6a547c675fc87"
-});
+// Initialize Firebase only if we have the required keys
+if (apiKey && messagingSenderId && appId) {
+  firebase.initializeApp({
+    apiKey: apiKey,
+    authDomain: "gullyfoods.firebaseapp.com",
+    projectId: "gullyfoods",
+    storageBucket: "gullyfoods.firebasestorage.app",
+    messagingSenderId: messagingSenderId,
+    appId: appId
+  });
 
-const messaging = firebase.messaging();
+  const messaging = firebase.messaging();
 
-// Background message handler
-messaging.onBackgroundMessage((payload) => {
-  console.log("📩 Background message received", payload);
+  // Background message handler
+  messaging.onBackgroundMessage((payload) => {
+    console.log("[firebase-messaging-sw.js] Received background message ", payload);
+    
+    const notificationTitle = payload.notification.title;
+    const notificationOptions = {
+      body: payload.notification.body,
+      icon: payload.notification.icon || "/icons/AppIcon.jpg",
+      badge: "/icons/AppIcon.jpg",
+      data: payload.data,
+      tag: payload.data?.orderId || "default",
+      renotify: true
+    };
 
-  const notificationTitle = payload.notification?.title || "New Notification";
-  const notificationOptions = {
-    body: payload.notification?.body || "",
-    icon: "/icons/gullyfoodsLogo192.png",
-    badge: "/icons/gullyfoodsLogo192.png",
-    tag: payload.data?.orderId || "default",
-    requireInteraction: true,
-    renotify: true,
-    data: payload.data || {},
-  };
-
-  self.registration.showNotification(notificationTitle, notificationOptions);
-});
+    self.registration.showNotification(notificationTitle, notificationOptions);
+  });
+}
 
 // Handle notification click
 self.addEventListener("notificationclick", (event) => {
-  console.log("Notification clicked:", event);
   event.notification.close();
-
-  const url = event.notification.data?.url || "/";
+  
+  const urlToOpen = event.notification.data?.url || "/";
+  
   event.waitUntil(
-    clients.matchAll({ type: "window" }).then((clientList) => {
-      // If a window is already open, focus it
-      for (const client of clientList) {
-        if (client.url === url && "focus" in client) {
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url === urlToOpen && "focus" in client) {
           return client.focus();
         }
       }
-      // Otherwise open a new window
       if (clients.openWindow) {
-        return clients.openWindow(url);
+        return clients.openWindow(urlToOpen);
       }
     })
   );

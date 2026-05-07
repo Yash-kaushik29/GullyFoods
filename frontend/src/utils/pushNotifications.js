@@ -18,10 +18,12 @@ export async function requestNotificationPermission() {
       return null;
     }
 
-    // ✅ Get or register the messaging service worker
-    let registration = await navigator.serviceWorker.getRegistration("/firebase-messaging-sw.js");
+    // ✅ Get or register the messaging service worker with config in query params
+    const swUrl = `/firebase-messaging-sw.js?apiKey=${process.env.REACT_APP_FIREBASE_CONFIG_KEY}&messagingSenderId=665093061382&appId=1:665093061382:web:80464457e6a547c675fc87`;
+    
+    let registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration) {
-      registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+      registration = await navigator.serviceWorker.register(swUrl);
       console.log("Messaging service worker registered:", registration.scope);
     }
 
@@ -57,9 +59,11 @@ export async function registerPushToken() {
     }
 
     // ✅ Get or register the messaging service worker
-    let registration = await navigator.serviceWorker.getRegistration("/firebase-messaging-sw.js");
+    const swUrl = `/firebase-messaging-sw.js?apiKey=${process.env.REACT_APP_FIREBASE_CONFIG_KEY}&messagingSenderId=665093061382&appId=1:665093061382:web:80464457e6a547c675fc87`;
+    
+    let registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration) {
-      registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+      registration = await navigator.serviceWorker.register(swUrl);
     }
 
     const token = await getToken(messaging, {
@@ -91,9 +95,11 @@ export async function registerDeliveryBoyPushToken() {
     }
 
     // ✅ Get or register the messaging service worker
-    let registration = await navigator.serviceWorker.getRegistration("/firebase-messaging-sw.js");
+    const swUrl = `/firebase-messaging-sw.js?apiKey=${process.env.REACT_APP_FIREBASE_CONFIG_KEY}&messagingSenderId=665093061382&appId=1:665093061382:web:80464457e6a547c675fc87`;
+    
+    let registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration) {
-      registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+      registration = await navigator.serviceWorker.register(swUrl);
     }
 
     const token = await getToken(messaging, {
@@ -115,8 +121,13 @@ export async function unregisterPushToken() {
   if (!("Notification" in window)) return;
 
   try {
-    const registration = await navigator.serviceWorker.getRegistration("/firebase-messaging-sw.js");
-    if (!registration) return;
+    // ✅ Get or register the messaging service worker
+    const swUrl = `/firebase-messaging-sw.js?apiKey=${process.env.REACT_APP_FIREBASE_CONFIG_KEY}&messagingSenderId=665093061382&appId=1:665093061382:web:80464457e6a547c675fc87`;
+
+    let registration = await navigator.serviceWorker.getRegistration(swUrl);
+    if (!registration) {
+      registration = await navigator.serviceWorker.register(swUrl);
+    }
 
     const token = await getToken(messaging, {
       vapidKey: VAPID_KEY,
@@ -137,7 +148,10 @@ export async function unregisterDeliveryBoyPushToken() {
   if (!("Notification" in window)) return;
 
   try {
-    const registration = await navigator.serviceWorker.getRegistration("/firebase-messaging-sw.js");
+    // ✅ Get or register the messaging service worker
+    const swUrl = `/firebase-messaging-sw.js?apiKey=${process.env.REACT_APP_FIREBASE_CONFIG_KEY}&messagingSenderId=665093061382&appId=1:665093061382:web:80464457e6a547c675fc87`;
+
+    const registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration) return;
 
     const token = await getToken(messaging, {
