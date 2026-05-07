@@ -22,8 +22,16 @@ if (apiKey && messagingSenderId && appId) {
 
   // Background message handler
   messaging.onBackgroundMessage((payload) => {
-    console.log("[firebase-messaging-sw.js] Received background message ", payload);
+    console.log("[firebase-messaging-sw.js] 📩 Received background message:", payload);
     
+    if (!payload.notification) {
+      console.log("[firebase-messaging-sw.js] ⚠️ Message has no notification object, forcing one...");
+      payload.notification = {
+        title: "GullyFoods Update",
+        body: "Tap to see order status"
+      };
+    }
+
     const notificationTitle = payload.notification.title;
     const notificationOptions = {
       body: payload.notification.body,
@@ -31,10 +39,13 @@ if (apiKey && messagingSenderId && appId) {
       badge: "/icons/AppIcon.jpg",
       data: payload.data,
       tag: payload.data?.orderId || "default",
-      renotify: true
+      renotify: true,
+      vibrate: [200, 100, 200]
     };
 
-    self.registration.showNotification(notificationTitle, notificationOptions);
+    console.log("[firebase-messaging-sw.js] 🔔 Showing notification:", notificationTitle);
+    
+    return self.registration.showNotification(notificationTitle, notificationOptions);
   });
 }
 

@@ -73,22 +73,28 @@ const App = () => {
 
     // Listen for foreground messages
     listenForegroundMessages(async (payload) => {
+      console.log("📩 App.js: Foreground message received:", payload);
       const { title, body } = payload.notification || {};
       
       // Show notification using the service worker (more reliable on mobile)
       if (Notification.permission === "granted") {
+        console.log("🔔 App.js: Attempting to show foreground notification...");
         const registration = await navigator.serviceWorker.getRegistration("/firebase-messaging-sw.js");
         if (registration) {
-          registration.showNotification(title, {
-            body,
+          registration.showNotification(title || "GullyFoods Update", {
+            body: body || "New update available",
             icon: "/icons/gullyfoodsLogo192.png",
             badge: "/icons/gullyfoodsLogo192.png",
             data: payload.data,
+            vibrate: [200, 100, 200]
           });
+          console.log("✅ App.js: showNotification called");
         } else {
-          // Fallback to basic notification if SW not found
+          console.warn("⚠️ App.js: Service worker registration not found for foreground notification");
           new Notification(title, { body, icon: "/icons/gullyfoodsLogo192.png" });
         }
+      } else {
+        console.error("❌ App.js: Notification permission NOT granted");
       }
     });
   }, []);
