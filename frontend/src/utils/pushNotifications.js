@@ -19,7 +19,7 @@ export async function requestNotificationPermission() {
     }
 
     // ✅ Get or register the messaging service worker with config in query params
-    const swUrl = "/firebase-messaging-sw.js";
+    const swUrl = "/service-worker.js";
     
     let registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration || !registration.active) {
@@ -59,7 +59,7 @@ export async function registerPushToken() {
     }
 
     // ✅ Get or register the messaging service worker
-    const swUrl = "/firebase-messaging-sw.js";
+    const swUrl = "/service-worker.js";
     
     let registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration) {
@@ -95,7 +95,7 @@ export async function registerDeliveryBoyPushToken() {
     }
 
     // ✅ Get or register the messaging service worker
-    const swUrl = "/firebase-messaging-sw.js";
+    const swUrl = "/service-worker.js";
     
     let registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration) {
@@ -122,7 +122,7 @@ export async function unregisterPushToken() {
 
   try {
     // ✅ Get or register the messaging service worker
-    const swUrl = "/firebase-messaging-sw.js";
+    const swUrl = "/service-worker.js";
 
     let registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration) {
@@ -149,7 +149,7 @@ export async function unregisterDeliveryBoyPushToken() {
 
   try {
     // ✅ Get or register the messaging service worker
-    const swUrl = "/firebase-messaging-sw.js";
+    const swUrl = "/service-worker.js";
 
     const registration = await navigator.serviceWorker.getRegistration(swUrl);
     if (!registration) return;

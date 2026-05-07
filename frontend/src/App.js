@@ -79,7 +79,7 @@ const App = () => {
       // Show notification using the service worker (more reliable on mobile)
       if (Notification.permission === "granted") {
         console.log("🔔 App.js: Attempting to show foreground notification...");
-        const registration = await navigator.serviceWorker.getRegistration("/firebase-messaging-sw.js");
+        const registration = await navigator.serviceWorker.getRegistration("/service-worker.js");
         if (registration) {
           registration.showNotification(title || "GullyFoods Update", {
             body: body || "New update available",

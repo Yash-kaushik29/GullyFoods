@@ -6,8 +6,8 @@ const firebaseConfig = {
   authDomain: "gullyfoods.firebaseapp.com",
   projectId: "gullyfoods",
   storageBucket: "gullyfoods.firebasestorage.app",
-  messagingSenderId: "665093061382",
-  appId: "1:665093061382:web:80464457e6a547c675fc87"
+  messagingSenderId: process.env.REACT_APP_FIREBASE_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);
