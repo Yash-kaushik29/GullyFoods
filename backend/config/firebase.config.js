@@ -126,10 +126,18 @@ async function sendPushNotification(tokens, title, body, data = {}) {
     }
     if (failCount > 0) {
       console.log("Some push notifications failed (tokens may be expired)");
-      // Log detailed errors
+      // Log detailed errors and clean up invalid tokens
       results.forEach((result, index) => {
         if (result.status === "rejected") {
-          console.error(`Token ${index + 1} failed:`, result.reason?.message || result.reason);
+          const errorMsg = result.reason?.message || result.reason || "";
+          const token = tokens[index];
+          console.error(`Token ${index + 1} failed:`, errorMsg);
+          
+          // If token is invalid/unregistered, remove it from DB
+          if (errorMsg.includes("NotRegistered") || errorMsg.includes("Device unregistered") || errorMsg.includes("invalid-registration-token")) {
+             // We do this in background (no await) to not block the response
+             cleanupInvalidToken(token);
+          }
         }
       });
     }
@@ -309,6 +317,26 @@ async function sendDeliveryBoyCancellationNotification(deliveryBoyId, orderId, o
       type: "delivery_cancelled"
     }
   );
+}
+
+/**
+ * Remove an invalid token from all user/delivery boy records
+ * @param {string} token 
+ */
+async function cleanupInvalidToken(token) {
+  try {
+    // Search and remove the token from both collections
+    const [userRes, dbRes] = await Promise.all([
+      User.updateMany({ fcmTokens: token }, { $pull: { fcmTokens: token } }),
+      DeliveryBoy.updateMany({ fcmTokens: token }, { $pull: { fcmTokens: token } })
+    ]);
+    
+    if (userRes.modifiedCount > 0 || dbRes.modifiedCount > 0) {
+      console.log(`✅ Cleaned up invalid token from database`);
+    }
+  } catch (err) {
+    console.error("Error during token cleanup:", err);
+  }
 }
 
 module.exports = { 
