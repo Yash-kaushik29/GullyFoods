@@ -163,22 +163,20 @@ router.post("/create-order", authenticateUser, async (req, res) => {
       sellersNotified,
       orderNote,
       expectedDeliveryTime,
-      deliveryAlert: activeDeliveryAlert.event || ""
+      deliveryAlert: activeDeliveryAlert.event || "",
     });
 
     await newOrder.save();
 
-    //     await sendTelegramMessage(`
-    //     🛒 <b>NEW ORDER RECEIVED</b>
+    await sendTelegramMessage(`
+        🛒 <b>NEW ORDER RECEIVED</b>
 
-    //     📦 Order ID: <b>#${newOrder?.id || "N/A"}</b>
-    //     💰 Amount: ₹${newOrder?.totalAmount}
-    //     🔗 <a href="https://gullyfoods.app/viewOrder/${newOrder?.id}">
-    // View Order Details
-    // </a>
-
-    //     ⏰ ${new Date().toLocaleString("en-IN")}
-    //     `);
+        📦 Order ID: <b>#${newOrder?.id || "N/A"}</b>
+        💰 Amount: ₹${newOrder?.totalAmount}
+        🔗 <a href="https://gullyfoods.app/viewOrder/${newOrder?.id}">
+    View Order Details
+    </a>
+        `);
 
     // ✅ Clear cart
     const updateCart = {
