@@ -18,6 +18,7 @@ const DeliveryBoyOrder = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [showQR, setShowQR] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("GullyFoodsDeliveryToken");
 
@@ -276,8 +277,63 @@ const DeliveryBoyOrder = () => {
           ))}
         </div>
 
+        <div className="flex flex-col gap-4">
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+            {!showQR ? (
+              <button
+                onClick={() => setShowQR(true)}
+                className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 text-white hover:scale-[1.02] transition-all duration-300"
+              >
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-xl">
+                  🔒
+                </div>
+
+                <div className="text-left">
+                  <p className="font-semibold text-lg">Unlock QR</p>
+                  <p className="text-sm text-gray-300">
+                    Generate payment QR for customer
+                  </p>
+                </div>
+              </button>
+            ) : (
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
+                      `upi://pay?pa=8527922909@pthdfc&pn=GullyFoods&am=${order.totalAmount}&cu=INR`,
+                    )}`}
+                    alt="UPI QR"
+                    className="rounded-2xl border border-gray-200 shadow-md"
+                  />
+
+                  <div className="absolute -top-3 -right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg animate-pulse">
+                    Ready
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <p className="font-semibold text-gray-800 text-lg">
+                    Scan to Pay ₹{order.totalAmount}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    UPI payment before pickup confirmation
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowQR(false)}
+                  className="text-sm text-red-500 hover:text-red-600"
+                >
+                  Hide QR
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="flex flex-col sm:flex-row gap-4">
-          {(order.deliveryStatus === "Processing" || order.deliveryStatus === "Preparing") && (
+          {(order.deliveryStatus === "Processing" ||
+            order.deliveryStatus === "Preparing") && (
             <button
               onClick={markAsOutForDelivery}
               disabled={updating}

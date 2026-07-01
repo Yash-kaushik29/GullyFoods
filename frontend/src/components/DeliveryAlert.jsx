@@ -44,7 +44,7 @@ const DeliveryAlert = ({ deliveryAlert }) => {
       )}
 
       {deliveryAlert === "Traffic" && (
-        <div className="relative overflow-hidden rounded-2xl border border-orange-400/20 bg-[#171717] p-4 shadow-lg">
+        <div className="relative overflow-hidden rounded-b-2xl border border-orange-400/20 bg-[#171717] p-4 shadow-lg">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,140,0,0.15),transparent_60%)]"></div>
 
           <div className="absolute bottom-0 left-0 flex w-full items-end gap-[3px] px-2 opacity-20">
@@ -92,7 +92,7 @@ const DeliveryAlert = ({ deliveryAlert }) => {
       )}
 
       {deliveryAlert === "Festival" && (
-        <div className="relative overflow-hidden rounded-2xl border border-pink-400/20 bg-gradient-to-br from-[#14091f] via-[#241136] to-[#3d1457] p-4 shadow-[0_0_30px_rgba(255,120,220,0.12)]">
+        <div className="relative overflow-hidden rounded-b-2xl border border-pink-400/20 bg-gradient-to-br from-[#14091f] via-[#241136] to-[#3d1457] p-4 shadow-[0_0_30px_rgba(255,120,220,0.12)]">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {[...Array(5)].map((_, i) => (
               <div

@@ -18,6 +18,7 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import DeliveryTimeline from "../../components/DeliveryTimeline";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiDocumentCurrencyRupee } from "react-icons/hi2";
+import DeliveryAlert from "../../components/DeliveryAlert";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -190,45 +191,7 @@ const OrderDetails = () => {
       <ToastContainer />
       <Navbar />
 
-      {order?.deliveryAlert === "Raining" && (
-          <div className="relative overflow-hidden rounded-b-2xl border border-blue-400/30 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 p-4 shadow-lg">
-            {/* Lightning Flash */}
-            <div className="lightning"></div>
-
-            {/* Falling Rain Drops */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {[...Array(40)].map((_, i) => (
-                <span
-                  key={i}
-                  className="absolute rain-drop"
-                  style={{
-                    left: `${Math.random() * 100}%`,
-                    animationDelay: `${Math.random() * 1}s`,
-                    animationDuration: `${0.35 + Math.random() * 0.4}s`,
-                    opacity: 0.2 + Math.random() * 0.4,
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Content */}
-            <div className="relative z-10 flex items-center gap-3">
-              <div className="text-3xl">⛈️</div>
-
-              <div>
-                <h4 className="text-sm font-bold text-white">
-                  Rain’s going wild outside 🌧️☔
-                </h4>
-
-                <p className="text-xs text-blue-100 leading-5 mt-1">
-                  It’s raining in your area 😵‍💫. Your order may take a little
-                  longer as our delivery partners are driving safe through the
-                  chaos. Stay cozy & stay dry 💙
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+    <DeliveryAlert deliveryAlert={order?.deliveryAlert || ""} />
 
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 -mt-1 py-6 px-2 sm:px-6">
         <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 sm:p-6">
