@@ -13,6 +13,9 @@ const CheckoutSummary = ({
   isFoodOrder,
   discount,
   getGroceryServiceCharge,
+  walletBalance,
+  useWallet,
+  setUseWallet,
 }) => {
 
   return (
@@ -84,6 +87,20 @@ const CheckoutSummary = ({
         <div className="flex justify-between text-green-600 font-semibold py-1">
           <span>Wallet Balance Applied 💳:</span>
           <span>- ₹{walletApplied.toFixed(2)}</span>
+        </div>
+      )}
+
+      {walletBalance > 0 && (
+        <div className="flex items-center gap-2 mt-4 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer transition hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setUseWallet(!useWallet)}>
+          <input
+            type="checkbox"
+            checked={useWallet}
+            onChange={(e) => setUseWallet(e.target.checked)}
+            className="w-5 h-5 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer"
+          />
+          <span className="text-gray-800 dark:text-gray-200 font-medium select-none">
+            Use Wallet Balance (₹{walletBalance.toFixed(2)} available)
+          </span>
         </div>
       )}
 

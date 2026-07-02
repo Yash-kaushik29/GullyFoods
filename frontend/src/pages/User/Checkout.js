@@ -45,6 +45,7 @@ const Checkout = () => {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [distance, setDistance] = useState(0);
   const [orderNote, setOrderNote] = useState("");
+  const [useWallet, setUseWallet] = useState(false);
 
   const isFoodOrder = cartKey === "foodCart";
 
@@ -154,7 +155,7 @@ const Checkout = () => {
       : getGroceryServiceCharge(cartTotalPrice) + deliveryCharge);
 
   const walletBalance = user?.walletBalance || 0;
-  const walletApplied = walletBalance > 0 ? Math.min(walletBalance, totalAmount) : 0;
+  const walletApplied = useWallet && walletBalance > 0 ? Math.min(walletBalance, totalAmount) : 0;
   const finalPayableAmount = totalAmount - walletApplied;
 
   const handleCheckout = async () => {
@@ -183,6 +184,7 @@ const Checkout = () => {
       paymentMethod: paymentMethod === "Razorpay" ? "Online" : "COD",
       paymentStatus: paymentMethod === "Razorpay" ? "Paid" : "Unpaid",
       cartKey,
+      useWallet,
     };
 
     try {
@@ -288,16 +290,34 @@ const Checkout = () => {
           <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm mb-4 mt-2 max-w-lg mx-auto">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Premium Goal</span>
-              <span className="text-sm text-green-600 font-semibold">{user.monthlyOrdersCount || 0}/3 Orders</span>
+              <span className="text-sm text-green-600 font-semibold">{Math.min(user.monthlyOrdersCount || 0, 3)}/3 Orders</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
               <div className="bg-gradient-to-r from-green-400 to-green-500 h-2.5 rounded-full" style={{ width: `${Math.min(((user.monthlyOrdersCount || 0) / 3) * 100, 100)}%` }}></div>
             </div>
             {(user.monthlyOrdersCount || 0) === 2 ? (
               <p className="text-xs text-green-600 font-semibold mt-2 animate-pulse">🎉 Congratulations! Your premium is going to start after this order!</p>
+            ) : (user.monthlyOrdersCount || 0) >= 3 ? (
+              <p className="text-xs text-green-600 font-semibold mt-2 animate-pulse">🎉 Place this order to activate Premium!</p>
             ) : (
               <p className="text-xs text-gray-500 mt-2">{3 - (user.monthlyOrdersCount || 0)} orders left to unlock 2% Cashback!</p>
             )}
+          </div>
+        )}
+
+        {user && user.isPremium && (
+          <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-amber-500 rounded-xl p-4 shadow-md mb-4 mt-2 max-w-lg mx-auto text-white flex items-center gap-4 animate-fade-in border border-yellow-300">
+            <div className="relative shrink-0">
+              <FaCrown className="text-4xl text-yellow-100 drop-shadow-md animate-bounce" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-lg tracking-wide drop-shadow-sm flex items-center gap-1">
+                You're a Premium User! 🌟
+              </h3>
+              <p className="text-sm font-medium text-amber-50 drop-shadow-sm mt-0.5 leading-tight">
+                Enjoy an exclusive <strong>2% cashback</strong> added straight to your wallet when this order is delivered!
+              </p>
+            </div>
           </div>
         )}
 
@@ -333,6 +353,9 @@ const Checkout = () => {
           convenienceFees={convenienceFees}
           discount={discount}
           getGroceryServiceCharge={getGroceryServiceCharge}
+          walletBalance={walletBalance}
+          useWallet={useWallet}
+          setUseWallet={setUseWallet}
         />
 
         {/* Payment Method & Place Order */}

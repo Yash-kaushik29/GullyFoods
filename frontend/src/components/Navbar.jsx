@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { RiAccountCircleLine, RiDrinks2Line } from "react-icons/ri";
-import { FaSun, FaMoon, FaHistory, FaHome } from "react-icons/fa";
+import { FaSun, FaMoon, FaHistory, FaHome, FaCrown } from "react-icons/fa";
 import { UserContext } from "../context/userContext";
 import {  GiShoppingCart } from "react-icons/gi";
 
@@ -178,7 +178,12 @@ const Navbar = () => {
             to="/user/profile"
             className="p-2 transition flex flex-col items-center gap-1 text-center"
           >
-            <div className="flex justify-center items-center w-8 h-8 rounded-full bg-green-600 text-white hover:bg-green-600 font-semibold">
+            <div className="relative flex justify-center items-center w-8 h-8 rounded-full bg-green-600 text-white hover:bg-green-600 font-semibold">
+              {user?.isPremium && (
+                <div className="absolute -top-[14px] left-1/2 transform -translate-x-1/2 z-10 animate-bounce">
+                  <FaCrown className="text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)] text-xl" />
+                </div>
+              )}
               {user?.username ? user.username.charAt(0).toUpperCase() : "U"}
             </div>
             <span className="text-xs text-gray-600 dark:text-white">Profile</span>

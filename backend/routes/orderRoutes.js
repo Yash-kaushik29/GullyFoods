@@ -81,6 +81,7 @@ router.post("/create-order", authenticateUser, async (req, res) => {
     distance,
     cartKey,
     coupon,
+    useWallet,
   } = req.body;
 
   try {
@@ -140,15 +141,9 @@ router.post("/create-order", authenticateUser, async (req, res) => {
     let wallet = await Wallet.findOne({ user: userId });
     
     let walletApplied = 0;
-    if (wallet && wallet.balance > 0) {
+    if (wallet && wallet.balance > 0 && useWallet === true) {
       walletApplied = Math.min(wallet.balance, totalAmount);
       totalAmount -= walletApplied;
-    }
-
-    const wasPremium = wallet ? wallet.isPremium : false;
-    let cashbackEarned = 0;
-    if (wasPremium && totalAmount > 0) {
-      cashbackEarned = Math.round(totalAmount * 0.02);
     }
 
     const expectedDeliveryTime = calculateExpectedDeliveryTime(
@@ -210,16 +205,6 @@ router.post("/create-order", authenticateUser, async (req, res) => {
             type: "Debit",
             amount: walletApplied,
             description: `Used for order ${newOrder.id}`,
-            date: new Date()
-          });
-        }
-
-        if (cashbackEarned > 0) {
-          wallet.balance += cashbackEarned;
-          wallet.transactions.push({
-            type: "Credit",
-            amount: cashbackEarned,
-            description: `Cashback for order ${newOrder.id}`,
             date: new Date()
           });
         }

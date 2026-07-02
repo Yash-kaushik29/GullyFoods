@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import Navbar from "../../components/Navbar";
 import { IoLogOut } from "react-icons/io5";
+import { FaCrown } from "react-icons/fa";
 import { UserContext } from "../../context/userContext";
 import { Link, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -86,10 +87,17 @@ const UserProfile = () => {
           {user && (
             <div className="w-full max-w-xl bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
               {/* Profile Header */}
-              <div className="relative bg-gradient-to-r from-green-400 to-green-600 p-6 text-center text-white">
+              <div className={`relative p-6 text-center text-white ${user?.isPremium ? 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500' : 'bg-gradient-to-r from-green-400 to-green-600'}`}>
                 {/* Avatar (Fallback to initials) */}
-                <div className="w-20 h-20 mx-auto rounded-full bg-white text-green-600 flex items-center justify-center text-3xl font-bold shadow-md">
-                  {user.username?.charAt(0) || "U"}
+                <div className="relative w-20 h-20 mx-auto rounded-full bg-white text-green-600 flex items-center justify-center text-3xl font-bold shadow-md">
+                  {user?.isPremium && (
+                    <div className="absolute -top-[16px] left-1/2 transform -translate-x-1/2 z-10 animate-bounce">
+                      <FaCrown className="text-yellow-400 drop-shadow-[0_0_8px_rgba(255,255,255,0.9)] text-3xl" />
+                    </div>
+                  )}
+                  <span className={user?.isPremium ? "text-orange-500" : "text-green-600"}>
+                    {user.username?.charAt(0) || "U"}
+                  </span>
                 </div>
 
                 {/* Switch to Seller Profile */}
@@ -112,10 +120,15 @@ const UserProfile = () => {
                 )}
 
                 {/* Username & Phone */}
-                <h1 className="mt-3 text-2xl font-bold">
+                <h1 className="mt-4 text-2xl font-bold flex justify-center items-center gap-2">
                   {user.username || "User"}
                 </h1>
-                <p className="text-sm">{user.phone}</p>
+                {user?.isPremium && (
+                  <span className="inline-flex items-center gap-1 bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full mt-1 mb-1 border border-white/40 shadow-sm">
+                    <FaCrown className="text-yellow-300" /> Premium Member
+                  </span>
+                )}
+                <p className="text-sm mt-1 text-white/90">{user.phone}</p>
 
                 {/* Logout Icon */}
                 <button
