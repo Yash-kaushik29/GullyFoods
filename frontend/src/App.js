@@ -64,6 +64,7 @@ import {
   requestNotificationPermission,
   listenForegroundMessages,
 } from "./utils/pushNotifications";
+import PremiumBenefits from "./pages/User/PremiumBenefits";
 
 const App = () => {
   const { isOnline } = useContext(OfflineContext);
@@ -133,6 +134,7 @@ const App = () => {
             <Route path="/policy" element={<Policy />} />
             <Route path="/install-guide" element={<InstallGuide />} />
             <Route path="/my-account" element={<AccountDetails />} />
+            <Route path="/premium-benefits" element={<PremiumBenefits />} />
           </Routes>
         </UserContextProvider>
 
