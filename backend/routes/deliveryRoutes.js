@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const Seller = require("../models/Seller");
 const Product = require("../models/Product");
 const User = require("../models/User");
+const Wallet = require("../models/Wallet");
 const mongoose = require("mongoose");
 const { sendOrderStatusNotification } = require("../config/firebase.config");
 
@@ -341,6 +342,22 @@ router.put("/order/confirm-delivery/:orderId", async (req, res) => {
       ...item.toObject(),
       status: item.status !== "Cancelled" ? "Delivered" : item.status,
     }));
+
+    // ⭐ Cashback Logic for Premium Users
+    const wallet = await Wallet.findOne({ user: order.user }).session(session);
+    if (wallet && wallet.isPremium && order.totalAmount > 0) {
+      const cashbackEarned = Math.round(order.totalAmount * 0.02);
+      if (cashbackEarned > 0) {
+        wallet.balance += cashbackEarned;
+        wallet.transactions.push({
+          type: "Credit",
+          amount: cashbackEarned,
+          description: `Cashback for delivered order ${order.id}`,
+          date: new Date()
+        });
+        await wallet.save({ session });
+      }
+    }
 
     // 2️⃣ Calculate seller earnings
     const sellerSalesMap = {};
