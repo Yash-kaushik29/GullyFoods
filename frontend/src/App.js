@@ -38,6 +38,7 @@ import DeliveryBoyHome from "./pages/DeliveryBoy/DeliveryBoyHome";
 import DeliveryBoyOrders from "./pages/DeliveryBoy/DeliveryBoyOrders";
 import DeliveryBoyOrder from "./pages/DeliveryBoy/DeliveryBoyOrder";
 import Addresses from "./pages/User/Addresses";
+import WalletPage from "./pages/User/WalletPage";
 import HelpSupport from "./pages/User/HelpSupport ";
 import Restaurants from "./pages/User/Restaurants";
 import SellerSignup from "./pages/Seller/SellerSignup";
@@ -122,6 +123,7 @@ const App = () => {
             <Route path="/shop/:shopId" element={<ShopPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/wallet" element={<WalletPage />} />
             <Route path="/order/:orderId" element={<OrderDetails />} />
             <Route path="/recentOrders" element={<RecentOrders />} />
             <Route path="/notifications" element={<Notifications />} />

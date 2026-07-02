@@ -4,20 +4,14 @@ const crypto = require("crypto");
 const razorpayInstance = createRazorpayInstance();
 
 exports.createOrder = async (req, res) => {
-  const { cart, deliveryCharge } = req.body;
+  const { amount } = req.body;
 
-  if (!cart || cart.length === 0) {
-    return res.status(400).json({ success: false, message: "Cart is empty!" });
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ success: false, message: "Invalid amount!" });
   }
 
   try {
-    let totalAmount = 0;
-
-    for (const item of cart) {
-      totalAmount += item.product.price * item.quantity; // Calculate subtotal
-    }
-
-    totalAmount += deliveryCharge; // Add delivery charge
+    let totalAmount = amount;
 
     // Create a Razorpay order
     const options = {

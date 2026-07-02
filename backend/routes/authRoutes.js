@@ -8,6 +8,7 @@ const bcrypt = require("bcrypt");
 const axios = require("axios");
 const authenticateSeller = require("../middleware/sellerAuthMiddleware");
 const authenticateUser = require("../middleware/authMiddleware");
+const Order = require("../models/Order");
 
 const router = express();
 
@@ -347,6 +348,17 @@ router.post("/user-login", async (req, res) => {
         );
     }
 
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const monthlyOrdersCount = await Order.countDocuments({
+      user: existingUser._id,
+      createdAt: { $gte: startOfMonth }
+    });
+
+    const isPremium = monthlyOrdersCount >= 3;
+
     res.json({
       success: true,
       message: "Logged In Successfully!",
@@ -358,6 +370,10 @@ router.post("/user-login", async (req, res) => {
         groceryCart: existingUser.groceryCart,
         phone: existingUser.phone,
         isSeller: existingUser.isSeller,
+        walletBalance: existingUser.walletBalance,
+        walletTransactions: existingUser.walletTransactions,
+        monthlyOrdersCount,
+        isPremium
       },
     });
   } catch (error) {
@@ -479,13 +495,29 @@ router.post("/seller-login", async (req, res) => {
   }
 });
 
-router.get("/getUser", authenticateUser, (req, res) => {
-  const { _id, username, foodCart, groceryCart, phone, isSeller } = req.user;
+router.get("/getUser", authenticateUser, async (req, res) => {
+  const { _id, username, foodCart, groceryCart, phone, isSeller, walletBalance, walletTransactions } = req.user;
 
-  res.json({
-    success: true,
-    user: { _id, username, foodCart, groceryCart, phone, isSeller },
-  });
+  try {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const monthlyOrdersCount = await Order.countDocuments({
+      user: _id,
+      createdAt: { $gte: startOfMonth }
+    });
+
+    const isPremium = monthlyOrdersCount >= 3;
+
+    res.json({
+      success: true,
+      user: { _id, username, foodCart, groceryCart, phone, isSeller, walletBalance, walletTransactions, isPremium, monthlyOrdersCount },
+    });
+  } catch (error) {
+    console.error("Error fetching user stats:", error);
+    res.status(500).json({ success: false });
+  }
 });
 
 router.get("/me", authenticateUser, async (req, res) => {

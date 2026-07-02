@@ -1,4 +1,6 @@
 import { useContext, useEffect, useState } from "react";
+import { FaCrown } from "react-icons/fa";
+import { MdClose } from "react-icons/md";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
@@ -45,6 +47,14 @@ const Checkout = () => {
   const [orderNote, setOrderNote] = useState("");
 
   const isFoodOrder = cartKey === "foodCart";
+
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+
+  useEffect(() => {
+    if (user && (user.monthlyOrdersCount || 0) === 2 && !user.isPremium) {
+      setShowPremiumModal(true);
+    }
+  }, [user]);
 
   const taxes = isFoodOrder ? (cartTotalPrice * 5) / 100 : 0;
   const [convenienceFees, setConvenienceFees] = useState(0);
@@ -136,6 +146,17 @@ const Checkout = () => {
     setDeliveryCharge(delivery);
   };
 
+  const totalAmount =
+    cartTotalPrice -
+    discount +
+    (isFoodOrder
+      ? taxes + convenienceFees + deliveryCharge
+      : getGroceryServiceCharge(cartTotalPrice) + deliveryCharge);
+
+  const walletBalance = user?.walletBalance || 0;
+  const walletApplied = walletBalance > 0 ? Math.min(walletBalance, totalAmount) : 0;
+  const finalPayableAmount = totalAmount - walletApplied;
+
   const handleCheckout = async () => {
     if (!selectedAddress)
       return toast.error("Please select a delivery address.");
@@ -165,7 +186,7 @@ const Checkout = () => {
     };
 
     try {
-      if (paymentMethod === "COD") {
+      if (paymentMethod === "COD" || finalPayableAmount === 0) {
         const { data } = await api.post(
           `/api/order/create-order`,
           orderPayload,
@@ -195,7 +216,7 @@ const Checkout = () => {
     try {
       const { data } = await api.post(
         `/api/payment/createOrder`,
-        { orderId: 1, cart: cartItems, deliveryCharge },
+        { amount: finalPayableAmount },
         { withCredentials: true },
       );
 
@@ -242,12 +263,7 @@ const Checkout = () => {
     }
   };
 
-  const totalAmount =
-    cartTotalPrice -
-    discount +
-    (isFoodOrder
-      ? taxes + convenienceFees + deliveryCharge
-      : getGroceryServiceCharge(cartTotalPrice) + deliveryCharge);
+
 
   if (isPlacingOrder) {
     return (
@@ -267,10 +283,28 @@ const Checkout = () => {
       <ToastContainer position="top-right" autoClose={3000} />
       <Navbar />
 
-      <div className="max-w-lg mx-auto px-6 py-4 rounded-2xl shadow-xl bg-white dark:bg-gray-800">
-        <h2 className="text-2xl font-bold mb-1 text-center text-gray-900 dark:text-white">
-          Checkout 🛒
-        </h2>
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 max-w-4xl mx-auto w-full">
+        {user && !user.isPremium && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm mb-4 mt-2 max-w-lg mx-auto">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Premium Goal</span>
+              <span className="text-sm text-green-600 font-semibold">{user.monthlyOrdersCount || 0}/3 Orders</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+              <div className="bg-gradient-to-r from-green-400 to-green-500 h-2.5 rounded-full" style={{ width: `${Math.min(((user.monthlyOrdersCount || 0) / 3) * 100, 100)}%` }}></div>
+            </div>
+            {(user.monthlyOrdersCount || 0) === 2 ? (
+              <p className="text-xs text-green-600 font-semibold mt-2 animate-pulse">🎉 Congratulations! Your premium is going to start after this order!</p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-2">{3 - (user.monthlyOrdersCount || 0)} orders left to unlock 2% Cashback!</p>
+            )}
+          </div>
+        )}
+
+        <div className="max-w-lg mx-auto px-6 py-4 rounded-2xl shadow-xl bg-white dark:bg-gray-800">
+          <h2 className="text-2xl font-bold mb-1 text-center text-gray-900 dark:text-white">
+            Checkout 🛒
+          </h2>
 
         {/* Address Selection */}
         {user && (
@@ -290,6 +324,8 @@ const Checkout = () => {
           cartTotalPrice={cartTotalPrice}
           selectedCoupon={selectedCoupon}
           totalAmount={totalAmount}
+          walletApplied={walletApplied}
+          finalPayableAmount={finalPayableAmount}
           isFoodOrder={isFoodOrder}
           taxes={taxes}
           deliveryCharge={deliveryCharge}
@@ -316,7 +352,47 @@ const Checkout = () => {
           selectedCoupon={selectedCoupon}
           setSelectedCoupon={setSelectedCoupon}
         />
+        </div>
       </div>
+
+      {/* Premium Unlock Sexy Modal */}
+      {showPremiumModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-sm overflow-hidden bg-white dark:bg-gray-800 rounded-3xl shadow-2xl transform transition-all scale-100 animate-scale-up">
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowPremiumModal(false)}
+              className="absolute top-4 right-4 z-10 p-2 bg-white/20 hover:bg-white/40 dark:bg-black/20 dark:hover:bg-black/40 rounded-full backdrop-blur-md transition-colors"
+            >
+              <MdClose className="text-xl text-gray-800 dark:text-white" />
+            </button>
+
+            {/* Sexy Gradient Background Header */}
+            <div className="h-32 w-full bg-gradient-to-br from-yellow-400 via-orange-400 to-red-500 relative flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/10"></div>
+              <FaCrown className="text-6xl text-white drop-shadow-xl animate-bounce" />
+            </div>
+
+            {/* Content */}
+            <div className="p-6 text-center">
+              <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-2">
+                Almost Premium! 🎉
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                You are just <strong>1 order away</strong> from unlocking <span className="font-bold text-green-600">Premium Status</span>! Complete this checkout to start earning 2% Cashback on all future orders!
+              </p>
+              
+              <button 
+                onClick={() => setShowPremiumModal(false)}
+                className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg transform transition active:scale-95"
+              >
+                Let's Go! 🚀
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

@@ -8,6 +8,8 @@ const CheckoutSummary = ({
   convenienceFees,
   selectedCoupon,
   totalAmount,
+  walletApplied,
+  finalPayableAmount,
   isFoodOrder,
   discount,
   getGroceryServiceCharge,
@@ -71,10 +73,25 @@ const CheckoutSummary = ({
       )}
 
       <div className="h-[1px] bg-gray-300 dark:bg-gray-600 my-2"></div>
-      <div className="flex justify-between text-xl font-bold">
-        <span>Total:</span>
+      <div className="flex justify-between text-lg font-bold">
+        <span>Order Total:</span>
+        <span className="text-gray-800 dark:text-gray-100">
+          ₹{totalAmount.toFixed(2)}
+        </span>
+      </div>
+
+      {walletApplied > 0 && (
+        <div className="flex justify-between text-green-600 font-semibold py-1">
+          <span>Wallet Balance Applied 💳:</span>
+          <span>- ₹{walletApplied.toFixed(2)}</span>
+        </div>
+      )}
+
+      <div className="h-[1px] bg-gray-300 dark:bg-gray-600 my-2"></div>
+      <div className="flex justify-between text-xl font-extrabold">
+        <span>Amount To Pay:</span>
         <span className="text-green-600">
-          ₹{(totalAmount).toFixed(2)}
+          ₹{finalPayableAmount.toFixed(2)}
         </span>
       </div>
     </div>

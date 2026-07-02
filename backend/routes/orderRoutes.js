@@ -127,13 +127,35 @@ router.post("/create-order", authenticateUser, async (req, res) => {
       }),
     );
 
-    const totalAmount = Math.round(
+    let totalAmount = Math.round(
       subTotal -
         shopDiscountValue -
         discount +
         deliveryCharge +
         (orderType === "Food" ? taxes + convenienceFees : serviceCharge),
     );
+
+    const userRecord = await User.findById(userId);
+    let walletApplied = 0;
+    if (userRecord && userRecord.walletBalance > 0) {
+      walletApplied = Math.min(userRecord.walletBalance, totalAmount);
+      totalAmount -= walletApplied;
+    }
+
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const monthlyOrdersCount = await Order.countDocuments({
+      user: userId,
+      createdAt: { $gte: startOfMonth }
+    });
+
+    const wasPremium = monthlyOrdersCount >= 3;
+    let cashbackEarned = 0;
+    if (wasPremium && totalAmount > 0) {
+      cashbackEarned = Math.round(totalAmount * 0.02);
+    }
 
     const expectedDeliveryTime = calculateExpectedDeliveryTime(
       orderType,
@@ -163,33 +185,53 @@ router.post("/create-order", authenticateUser, async (req, res) => {
       sellersNotified,
       orderNote,
       expectedDeliveryTime,
-      deliveryAlert: activeDeliveryAlert.event || "",
+      deliveryAlert: activeDeliveryAlert ? (activeDeliveryAlert.event || "") : "",
     });
 
     await newOrder.save();
 
-    await sendTelegramMessage(`
-        🛒 <b>NEW ORDER RECEIVED</b>
+    // await sendTelegramMessage(`
+    //     🛒 <b>NEW ORDER RECEIVED</b>
 
-        📦 Order ID: <b>#${newOrder?.id || "N/A"}</b>
-        💰 Amount: ₹${newOrder?.totalAmount}
-        🔗 <a href="https://gullyfoods.app/viewOrder/${newOrder?.id}">
-    View Order Details
-    </a>
-        `);
+    //     📦 Order ID: <b>#${newOrder?.id || "N/A"}</b>
+    //     💰 Amount: ₹${newOrder?.totalAmount}
+    //     🔗 <a href="https://gullyfoods.app/viewOrder/${newOrder?.id}">
+    // View Order Details
+    // </a>
+    //     `);
 
-    // ✅ Clear cart
-    const updateCart = {
-      $push: {
-        notifications: {
-          message: `Your order with order ID: #${newOrder.id} is processed.`,
-          url: `/order/${newOrder._id}`,
-        },
-        orders: newOrder._id,
-      },
-    };
-    updateCart[cartKey] = [];
-    await User.findByIdAndUpdate(userId, updateCart);
+    // ✅ Handle User Updates: Cart, Wallet, Premium
+    if (userRecord) {
+      userRecord.notifications.push({
+        message: `Your order with order ID: #${newOrder.id} is processed.`,
+        url: `/order/${newOrder._id}`,
+      });
+      userRecord.orders.push(newOrder._id);
+      userRecord[cartKey] = [];
+
+      if (walletApplied > 0) {
+        userRecord.walletBalance -= walletApplied;
+        userRecord.walletTransactions.push({
+          type: "Debit",
+          amount: walletApplied,
+          description: `Used for order ${newOrder.id}`,
+          date: new Date()
+        });
+      }
+
+      if (cashbackEarned > 0) {
+        userRecord.walletBalance += cashbackEarned;
+        userRecord.walletTransactions.push({
+          type: "Credit",
+          amount: cashbackEarned,
+          description: `Cashback for order ${newOrder.id}`,
+          date: new Date()
+        });
+      }
+
+
+      await userRecord.save();
+    }
 
     // ✅ Coupon cleanup
     if (coupon) {

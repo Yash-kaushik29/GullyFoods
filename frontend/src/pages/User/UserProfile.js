@@ -14,6 +14,7 @@ import {
   MdShoppingCart,
   MdCameraswitch,
 } from "react-icons/md";
+import { GiWallet } from "react-icons/gi";
 import api from "../../utils/axiosInstance";
 import { unregisterPushToken, requestNotificationPermission, registerPushToken } from "../../utils/pushNotifications";
 
@@ -127,6 +128,17 @@ const UserProfile = () => {
 
               {/* Navigation Buttons */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
+                <Link
+                  to="/wallet"
+                  className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-xl p-4 shadow-sm hover:scale-105 transition w-full text-left"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">My Wallet</span>
+                    <span className="text-2xl font-bold text-green-600 mt-1">₹ {(user.walletBalance || 0).toFixed(2)}</span>
+                  </div>
+                  <GiWallet className="text-4xl text-green-500" />
+                </Link>
+
                 <button
                   onClick={async () => {
                     const status = Notification.permission;
