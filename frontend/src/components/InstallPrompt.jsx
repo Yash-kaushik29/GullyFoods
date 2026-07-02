@@ -2,133 +2,112 @@ import React, { useEffect, useState } from "react";
 import { MdDownload } from "react-icons/md";
 import { IoClose } from "react-icons/io5";
 import { Link } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+
+const PLAY_STORE_URL =
+  "https://play.google.com/store/apps/details?id=app.gullyfoods.twa&hl=en-IN";
 
 const InstallPrompt = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showBanner, setShowBanner] = useState(false);
   const [isIos, setIsIos] = useState(false);
 
   useEffect(() => {
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const ios = /iphone|ipad|ipod/.test(userAgent);
+    const ua = navigator.userAgent.toLowerCase();
+
+    const ios = /iphone|ipad|ipod/.test(ua);
+    const android = /android/.test(ua);
+
     setIsIos(ios);
 
-    // Hide banner if already installed
-    if (
+    const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      window.navigator.standalone === true
-    ) {
+      window.navigator.standalone === true;
+
+    const isNativeApp =
+      ua.includes("gullyfoodsapp") || !!window.ReactNativeWebView;
+
+    if (isStandalone || isNativeApp) {
       setShowBanner(false);
       return;
     }
 
-    // Android install available
-    const handler = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
+    if (android || ios) {
       setShowBanner(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", handler);
-
-    // iOS fallback (no install event)
-    if (ios) {
-      setTimeout(() => setShowBanner(true), 2000);
     }
-
-    // Remove banner after install
-    window.addEventListener("appinstalled", () => {
-      setShowBanner(false);
-    });
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handler);
-    };
   }, []);
 
-  const handleInstall = async () => {
-    if (!isIos && deferredPrompt) {
-      deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
+  const handleAction = () => {
+    if (isIos) return;
 
-      if (choice.outcome === "accepted") {
-        toast.success("Installing GullyFoods 🚀");
-        setShowBanner(false);
-      } else {
-        toast.info("Installation cancelled");
-      }
-
-      setDeferredPrompt(null);
-      return;
-    }
-
-    if (isIos) {
-      toast.info(
-        "On iPhone: Tap the Share icon in Safari → 'Add to Home Screen'",
-        { autoClose: 5000 }
-      );
-      return;
-    }
-
-    toast.error("Installation not supported in this browser");
+    window.open(PLAY_STORE_URL, "_blank");
   };
 
   if (!showBanner) return null;
 
-  const canInstall = !isIos && Boolean(deferredPrompt);
-
   return (
-    <>
-      <div className="w-full bg-green-500 text-white px-4 py-3 rounded-b-lg shadow-lg animate-slide-down">
-        <div className="flex items-center justify-between gap-3">
-          
-          {/* App Icon + Text */}
-          <div className="flex items-center gap-3">
-            <img
-              src="/icons/gullyfoodsLogo192.png"
-              alt="GullyFoods Icon"
-              className="w-9 h-9 rounded-lg shadow bg-white"
-            />
-            <span className="font-medium text-sm sm:text-base">
-              Add app to your <span className="font-bold">home screen</span>
-            </span>
-          </div>
+    <div
+      className={`w-full shadow-lg ${
+        isIos
+          ? "bg-green-500 rounded-b-xl"
+          : "bg-gradient-to-r from-green-700 via-green-600 to-emerald-500"
+      }`}
+    >
+      <div className="px-4 py-3 flex items-center justify-between">
+        {/* Left */}
+        <div className="flex items-center gap-3">
+          <img
+            src="/icons/gullyfoodsLogo192.png"
+            alt="GullyFoods"
+            className="w-11 h-11 rounded-xl bg-white p-1 shadow"
+          />
 
-          {/* Buttons */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleInstall}
-              disabled={!canInstall && !isIos}
-              className="flex items-center gap-1 bg-white text-green-600 font-semibold px-3 py-1.5 rounded-lg shadow hover:bg-gray-100 transition disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <MdDownload className="text-lg" />
-              {isIos ? "How" : "Add"}
-            </button>
-
-            <button
-              onClick={() => setShowBanner(false)}
-              className="bg-transparent text-white hover:bg-green-600 p-1.5 rounded-lg transition"
-            >
-              <IoClose className="text-xl" />
-            </button>
+          <div className="leading-tight">
+            {isIos ? (
+              <>
+                <h3 className="text-base font-semibold text-white">
+                  Install GullyFoods
+                </h3>
+                <p className="text-xs text-green-100 mt-0.5">
+                  Add it to your Home Screen.
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="text-base font-semibold text-white">
+                  Get the App
+                </h3>
+                <p className="text-xs text-green-100 mt-0.5">
+                  ⚡Faster ordering
+                </p>
+              </>
+            )}
           </div>
         </div>
 
-        <div className="mt-2 text-white opacity-90">
-          Trouble installing?{" "}
-          <Link
-            to="/install-guide"
-            className="underline font-semibold hover:text-gray-200"
-          >
-            See guide
-          </Link>
+        <div className="flex items-center">
+          {isIos ? (
+            <Link
+              to="/install-guide"
+              className="bg-white text-green-700 text-sm font-semibold px-4 py-2 rounded-lg shadow hover:bg-gray-100 transition"
+            >
+              Guide
+            </Link>
+          ) : (
+            <a
+              href={PLAY_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block hover:opacity-90 transition"
+            >
+              <img
+                src="/icons/playStore.png"
+                alt="Get it on Google Play"
+                className="block h-auto w-[150px]"
+              />
+            </a>
+          )}
         </div>
       </div>
-
-      <ToastContainer />
-    </>
+    </div>
   );
 };
 

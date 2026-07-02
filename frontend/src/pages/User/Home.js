@@ -133,7 +133,7 @@ const Home = () => {
         </div>
       )}
 
-      <EventBanner />
+      {/* <EventBanner /> */}
 
       {/* <div className="flex flex-col items-center pt-4 lg:hidden">
         <div className="flex items-center gap-2 text-3xl">
