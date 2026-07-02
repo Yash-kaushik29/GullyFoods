@@ -56,17 +56,6 @@ const UserSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
-    walletBalance: { type: Number, default: 0 },
-    isPremium: { type: Boolean, default: false },
-    monthlyOrdersCount: { type: Number, default: 0 },
-    walletTransactions: [
-      {
-        amount: { type: Number, required: true },
-        type: { type: String, enum: ["Credit", "Debit"], required: true },
-        description: { type: String, required: true },
-        createdAt: { type: Date, default: Date.now },
-      },
-    ],
   },
   {
     timestamps: true,

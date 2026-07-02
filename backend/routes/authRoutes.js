@@ -9,6 +9,7 @@ const axios = require("axios");
 const authenticateSeller = require("../middleware/sellerAuthMiddleware");
 const authenticateUser = require("../middleware/authMiddleware");
 const Order = require("../models/Order");
+const Wallet = require("../models/Wallet");
 
 const router = express();
 
@@ -157,6 +158,9 @@ router.post("/user-signup", async (req, res) => {
     }
 
     await newUser.save();
+
+    const newWallet = new Wallet({ user: newUser._id });
+    await newWallet.save();
 
     const token = jwt.sign(
       {
@@ -357,7 +361,11 @@ router.post("/user-login", async (req, res) => {
       createdAt: { $gte: startOfMonth }
     });
 
-    const isPremium = monthlyOrdersCount >= 3;
+    let wallet = await Wallet.findOne({ user: existingUser._id });
+    if (!wallet) {
+      wallet = new Wallet({ user: existingUser._id });
+      await wallet.save();
+    }
 
     res.json({
       success: true,
@@ -370,10 +378,10 @@ router.post("/user-login", async (req, res) => {
         groceryCart: existingUser.groceryCart,
         phone: existingUser.phone,
         isSeller: existingUser.isSeller,
-        walletBalance: existingUser.walletBalance,
-        walletTransactions: existingUser.walletTransactions,
+        walletBalance: wallet.balance,
+        walletTransactions: wallet.transactions,
         monthlyOrdersCount,
-        isPremium
+        isPremium: wallet.isPremium
       },
     });
   } catch (error) {
@@ -496,7 +504,7 @@ router.post("/seller-login", async (req, res) => {
 });
 
 router.get("/getUser", authenticateUser, async (req, res) => {
-  const { _id, username, foodCart, groceryCart, phone, isSeller, walletBalance, walletTransactions } = req.user;
+  const { _id, username, foodCart, groceryCart, phone, isSeller } = req.user;
 
   try {
     const startOfMonth = new Date();
@@ -508,11 +516,15 @@ router.get("/getUser", authenticateUser, async (req, res) => {
       createdAt: { $gte: startOfMonth }
     });
 
-    const isPremium = monthlyOrdersCount >= 3;
+    let wallet = await Wallet.findOne({ user: _id });
+    if (!wallet) {
+      wallet = new Wallet({ user: _id });
+      await wallet.save();
+    }
 
     res.json({
       success: true,
-      user: { _id, username, foodCart, groceryCart, phone, isSeller, walletBalance, walletTransactions, isPremium, monthlyOrdersCount },
+      user: { _id, username, foodCart, groceryCart, phone, isSeller, walletBalance: wallet.balance, walletTransactions: wallet.transactions, isPremium: wallet.isPremium, monthlyOrdersCount },
     });
   } catch (error) {
     console.error("Error fetching user stats:", error);

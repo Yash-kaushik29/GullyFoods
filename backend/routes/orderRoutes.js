@@ -4,6 +4,7 @@ const Seller = require("../models/Seller");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
 const DeliveryBoy = require("../models/DeliveryBoy");
+const Wallet = require("../models/Wallet");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const PDFDocument = require("pdfkit");
@@ -136,22 +137,15 @@ router.post("/create-order", authenticateUser, async (req, res) => {
     );
 
     const userRecord = await User.findById(userId);
+    let wallet = await Wallet.findOne({ user: userId });
+    
     let walletApplied = 0;
-    if (userRecord && userRecord.walletBalance > 0) {
-      walletApplied = Math.min(userRecord.walletBalance, totalAmount);
+    if (wallet && wallet.balance > 0) {
+      walletApplied = Math.min(wallet.balance, totalAmount);
       totalAmount -= walletApplied;
     }
 
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const monthlyOrdersCount = await Order.countDocuments({
-      user: userId,
-      createdAt: { $gte: startOfMonth }
-    });
-
-    const wasPremium = monthlyOrdersCount >= 3;
+    const wasPremium = wallet ? wallet.isPremium : false;
     let cashbackEarned = 0;
     if (wasPremium && totalAmount > 0) {
       cashbackEarned = Math.round(totalAmount * 0.02);
@@ -209,26 +203,47 @@ router.post("/create-order", authenticateUser, async (req, res) => {
       userRecord.orders.push(newOrder._id);
       userRecord[cartKey] = [];
 
-      if (walletApplied > 0) {
-        userRecord.walletBalance -= walletApplied;
-        userRecord.walletTransactions.push({
-          type: "Debit",
-          amount: walletApplied,
-          description: `Used for order ${newOrder.id}`,
-          date: new Date()
-        });
-      }
+      if (wallet) {
+        if (walletApplied > 0) {
+          wallet.balance -= walletApplied;
+          wallet.transactions.push({
+            type: "Debit",
+            amount: walletApplied,
+            description: `Used for order ${newOrder.id}`,
+            date: new Date()
+          });
+        }
 
-      if (cashbackEarned > 0) {
-        userRecord.walletBalance += cashbackEarned;
-        userRecord.walletTransactions.push({
-          type: "Credit",
-          amount: cashbackEarned,
-          description: `Cashback for order ${newOrder.id}`,
-          date: new Date()
-        });
-      }
+        if (cashbackEarned > 0) {
+          wallet.balance += cashbackEarned;
+          wallet.transactions.push({
+            type: "Credit",
+            amount: cashbackEarned,
+            description: `Cashback for order ${newOrder.id}`,
+            date: new Date()
+          });
+        }
 
+        // Handle premium check with 30-day rolling window
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const recentOrdersCount = await Order.countDocuments({
+          user: userId,
+          createdAt: { $gte: thirtyDaysAgo }
+        });
+
+        // The current order just placed makes it >= 3
+        if (recentOrdersCount >= 3) {
+          wallet.isPremium = true;
+          // Set expiry 30 days from now
+          const expiryDate = new Date();
+          expiryDate.setDate(expiryDate.getDate() + 30);
+          wallet.premiumExpiryDate = expiryDate;
+        }
+
+        await wallet.save();
+      }
 
       await userRecord.save();
     }

@@ -6,6 +6,7 @@ const Seller = require("../models/Seller");
 const User = require("../models/User");
 const Shop = require("../models/Shop");
 const ArchivedOrder = require("../models/ArchivedOrder");
+const Wallet = require("../models/Wallet");
 
 const timeToMinutes = (time) => {
   const [hours, minutes] = time.split(":").map(Number);
@@ -155,5 +156,44 @@ cron.schedule(
     timezone: "Asia/Kolkata",
   },
 );
+
+cron.schedule("0 0 * * *", async () => {
+  try {
+    const now = new Date();
+    
+    // Find all wallets where premium has expired
+    const expiredWallets = await Wallet.find({
+      isPremium: true,
+      premiumExpiryDate: { $lte: now }
+    });
+
+    for (const wallet of expiredWallets) {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const recentOrdersCount = await Order.countDocuments({
+        user: wallet.user,
+        createdAt: { $gte: thirtyDaysAgo }
+      });
+
+      if (recentOrdersCount >= 3) {
+        // Extend premium for another 30 days
+        const newExpiry = new Date();
+        newExpiry.setDate(newExpiry.getDate() + 30);
+        wallet.premiumExpiryDate = newExpiry;
+      } else {
+        // Revoke premium
+        wallet.isPremium = false;
+        wallet.premiumExpiryDate = null;
+      }
+      
+      await wallet.save();
+    }
+    
+    console.log(`✅ Daily Premium check completed. Processed ${expiredWallets.length} wallets.`);
+  } catch (error) {
+    console.error("❌ Error running premium cron:", error);
+  }
+});
 
 
